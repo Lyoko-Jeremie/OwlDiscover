@@ -223,6 +223,7 @@ add_executable(${ProjectMainName}
         src/MultiCast/MultiCast.h
         src/MultiCast/MultiCast.cpp
         src/MultiCast/ControlMulticastMail.h
+        src/DiscoverState/DiscoverState.h
         )
 
 # ============================================================================================
