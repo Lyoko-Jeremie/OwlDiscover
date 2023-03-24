@@ -89,6 +89,7 @@ namespace OwlMultiCast {
         void start() {
             BOOST_LOG_OWL(trace_multicast) << "MultiCast start";
             do_receive();
+            do_send_back();
         }
 
     private:
