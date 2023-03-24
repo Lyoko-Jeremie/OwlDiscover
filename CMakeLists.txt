@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.26)
-set(ProjectMainName testImgui)
+set(ProjectMainName OwlDiscover)
 project(${ProjectMainName})
 
 set(CMAKE_CXX_STANDARD 20)
