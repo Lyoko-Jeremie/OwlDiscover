@@ -7,12 +7,28 @@
 #include <boost/exception_ptr.hpp>
 #include <boost/core/ignore_unused.hpp>
 
+
+#include <boost/multi_index_container.hpp>
+#include <boost/multi_index/tag.hpp>
+#include <boost/multi_index/member.hpp>
+#include <boost/multi_index/identity.hpp>
+#include <boost/multi_index/hashed_index.hpp>
+#include <boost/multi_index/sequenced_index.hpp>
+#include <boost/multi_index/ordered_index.hpp>
+#include <boost/multi_index/random_access_index.hpp>
+#include <boost/multi_index/composite_key.hpp>
+#include <boost/multi_index/key.hpp>
+
+#include "../DiscoverState/DiscoverState.h"
+
+
 #include "imgui.h"
 #include "imgui_internal.h"
 #include "imgui_impl_sdl2.h"
 #include "imgui_impl_dx11.h"
 #include <d3d11.h>
 #include <cstdio>
+#include <utility>
 #include <SDL.h>
 #include <SDL_syswm.h>
 
@@ -21,6 +37,30 @@ using boost::asio::use_awaitable;
 # define use_awaitable \
   boost::asio::use_awaitable_t(__FILE__, __LINE__, __PRETTY_FUNCTION__)
 #endif
+
+namespace OwlImGuiService {
+
+    struct DiscoverStateItemContainerRandomAccess {
+    };
+
+    typedef boost::multi_index_container<
+            OwlDiscoverState::DiscoverStateItem,
+            boost::multi_index::indexed_by<
+                    boost::multi_index::sequenced<>,
+                    boost::multi_index::ordered_unique<
+                            boost::multi_index::identity<OwlDiscoverState::DiscoverStateItem>
+                    >,
+                    boost::multi_index::hashed_unique<
+                            boost::multi_index::tag<OwlDiscoverState::DiscoverStateItem::IP>,
+                            boost::multi_index::member<OwlDiscoverState::DiscoverStateItem, std::string, &OwlDiscoverState::DiscoverStateItem::ip>
+                    >,
+                    boost::multi_index::random_access<
+                            boost::multi_index::tag<DiscoverStateItemContainerRandomAccess>
+                    >
+            >
+    > DiscoverStateItemContainer;
+
+}
 
 
 namespace OwlImGuiService {
@@ -36,18 +76,24 @@ namespace OwlImGuiService {
     struct ImGuiServiceImpl : public boost::enable_shared_from_this<ImGuiServiceImpl> {
     public:
         ImGuiServiceImpl(
-                boost::asio::io_context &ioc
-        ) : ioc_(ioc) {
+                boost::asio::io_context &ioc,
+                boost::weak_ptr<ImGuiService> parentPtr
+        ) : ioc_(ioc), parentPtr_(std::move(parentPtr)) {
         }
 
     private:
         boost::asio::io_context &ioc_;
+        boost::weak_ptr<ImGuiService> parentPtr_;
+
+        bool isCleaned = false;
 
     private:
         ID3D11Device *g_pd3dDevice = nullptr;
         ID3D11DeviceContext *g_pd3dDeviceContext = nullptr;
         IDXGISwapChain *g_pSwapChain = nullptr;
         ID3D11RenderTargetView *g_mainRenderTargetView = nullptr;
+
+        DiscoverStateItemContainer items;
 
     private:
 
@@ -134,15 +180,70 @@ namespace OwlImGuiService {
 
         void clear() {
 
-            // Cleanup
-            ImGui_ImplDX11_Shutdown();
-            ImGui_ImplSDL2_Shutdown();
-            ImGui::DestroyContext();
+            if (!isCleaned) {
+                isCleaned = true;
 
-            CleanupDeviceD3D();
-            SDL_DestroyWindow(window);
-            window = nullptr;
-            SDL_Quit();
+                // Cleanup
+                ImGui_ImplDX11_Shutdown();
+                ImGui_ImplSDL2_Shutdown();
+                ImGui::DestroyContext();
+
+                CleanupDeviceD3D();
+                SDL_DestroyWindow(window);
+                window = nullptr;
+                SDL_Quit();
+            }
+
+
+        }
+
+        void new_state(const boost::shared_ptr<OwlDiscoverState::DiscoverState> &s) {
+            BOOST_ASSERT(s);
+            BOOST_ASSERT(!weak_from_this().expired());
+
+            BOOST_LOG_OWL(trace) << "ImGuiServiceImpl::new_state before";
+
+            boost::asio::dispatch(ioc_, [this, s, self = shared_from_this()]() {
+                BOOST_ASSERT(s);
+                BOOST_ASSERT(self);
+
+                BOOST_LOG_OWL(trace) << "ImGuiServiceImpl::new_state update";
+
+//                return;
+
+                auto &accIp = items.get<OwlDiscoverState::DiscoverStateItem::IP>();
+                auto accIpEnd = accIp.end();
+                for (const auto &a: s->items) {
+                    BOOST_LOG_OWL(trace) << "ImGuiServiceImpl::new_state a " << a.ip;
+
+                    auto it = accIp.find(a.ip);
+                    BOOST_LOG_OWL(trace) << "ImGuiServiceImpl::new_state find ";
+                    BOOST_LOG_OWL(trace) << "ImGuiServiceImpl::new_state find " << (it == accIp.end());
+                    BOOST_LOG_OWL(trace) << "ImGuiServiceImpl::new_state find " << (it == accIpEnd);
+                    if (it == accIpEnd) {
+                        // update
+                        BOOST_LOG_OWL(trace) << "ImGuiServiceImpl::new_state update " << it->ip;
+                        accIp.modify(it, [&a](OwlDiscoverState::DiscoverStateItem &n) {
+                            n.lastTime = a.lastTime;
+                            n.port = a.port;
+                            n.updateCache();
+                        });
+                    } else {
+                        // insert
+                        BOOST_LOG_OWL(trace) << "ImGuiServiceImpl::new_state insert " << a.ip;
+                        auto b = a;
+                        b.updateCache();
+                        BOOST_LOG_OWL(trace) << "ImGuiServiceImpl::new_state add " << b.ip;
+                        items.emplace_back(b);
+                    }
+                }
+
+                BOOST_LOG_OWL(trace) << "ImGuiServiceImpl::new_state sort";
+                // re short it
+                items.sort();
+
+                BOOST_LOG_OWL(trace) << "ImGuiServiceImpl::new_state end";
+            });
 
         }
 
@@ -308,6 +409,7 @@ namespace OwlImGuiService {
                 ImGuiIO &io = ImGui::GetIO();
 
                 for (;;) {
+//                    BOOST_LOG_OWL(trace) << "ImGuiServiceImpl co_main_loop loop";
                     SDL_Event event;
                     while (SDL_PollEvent(&event)) {
                         ImGui_ImplSDL2_ProcessEvent(&event);
@@ -369,7 +471,9 @@ namespace OwlImGuiService {
                         if (ImGui::Begin("Hello, world!", &open, window_flags)) {
                             if (ImGui::BeginMenuBar()) {
                                 if (ImGui::BeginMenu("Menu")) {
-                                    if (ImGui::MenuItem("Quit", "Alt+F4")) {}
+                                    if (ImGui::MenuItem("Quit", "Alt+F4")) {
+                                        co_return true;
+                                    }
                                     ImGui::EndMenu();
                                 }
                                 ImGui::EndMenuBar();
@@ -395,6 +499,15 @@ namespace OwlImGuiService {
                             ImGui::Text("有些有用的文字");
 
 
+                            if (ImGui::Button("Query")) {
+                                BOOST_LOG_OWL(trace) << R"((ImGui::Button("Query")))";
+                                auto p = parentPtr_.lock();
+                                if (p) {
+                                    BOOST_LOG_OWL(trace) << R"(p->sendQuery())";
+                                    p->sendQuery();
+                                }
+                            }
+                            ImGui::SameLine();
                             ImGui::Button("StopAll");
                             ImGui::SameLine();
                             ImGui::Button("LandAll");
@@ -407,10 +520,23 @@ namespace OwlImGuiService {
                                 ImGui::BeginChild("AddrList", ImVec2(0, -footer_height_to_reserve),
                                                   true, ImGuiWindowFlags_HorizontalScrollbar);
 
-                                for (int i = 0; i < 100; ++i) {
+                                auto &accRc = items.get<DiscoverStateItemContainerRandomAccess>();
+                                if (accRc.empty()) {
+                                    ImGui::Text("Empty");
+                                }
+                                for (size_t i = 0; i < accRc.size(); ++i) {
+                                    auto &n = accRc.at(i);
                                     ImGui::Text(boost::lexical_cast<std::string>(i).c_str());
                                     ImGui::SameLine();
-                                    ImGui::Text("127.0.0.1");
+                                    ImGui::Text(n.ip.c_str());
+                                    ImGui::SameLine();
+                                    ImGui::Text(boost::lexical_cast<std::string>(n.port).c_str());
+                                    ImGui::SameLine();
+                                    ImGui::Text(n.cacheFirstTime.c_str());
+                                    ImGui::SameLine();
+                                    ImGui::Text(n.cacheLastTime.c_str());
+                                    ImGui::SameLine();
+                                    ImGui::Text(n.cacheDuration.c_str());
                                     ImGui::SameLine();
                                     ImGui::Button("Land");
                                     ImGui::SameLine();
@@ -485,14 +611,54 @@ namespace OwlImGuiService {
         config_(std::move(config)),
         mailbox_mc_(mailbox_mc),
         mailbox_ig_(mailbox_ig) {
-        impl = boost::make_shared<ImGuiServiceImpl>(ioc_);
+
+        mailbox_ig_->receiveA2B([this](OwlMailDefine::MailControl2ImGui &&data) {
+            boost::asio::dispatch(ioc_, [this, data, self = shared_from_this()]() {
+                auto m = boost::make_shared<OwlMailDefine::MailImGui2Control::element_type>();
+                m->runner = data->callbackRunner;
+
+                BOOST_ASSERT(impl);
+                if (data->state) {
+                    BOOST_LOG_OWL(trace) << "ImGuiService::ImGuiService (data->state)";
+                    impl->new_state(data->state);
+                } else {
+                    BOOST_LOG_OWL(error) << "ImGuiService::ImGuiService receiveA2B (data->state)";
+                }
+
+                mailbox_ig_->sendB2A(std::move(m));
+            });
+        });
+
+        mailbox_mc_->receiveB2A([this](OwlMailDefine::MailMulticast2Control &&data) {
+            if (data->runner) {
+                data->runner(data);
+            }
+        });
     }
 
     void ImGuiService::start() {
+        impl = boost::make_shared<ImGuiServiceImpl>(ioc_, weak_from_this());
         impl->start();
     }
 
     void ImGuiService::clear() {
         impl->clear();
     }
+
+    void ImGuiService::sendQuery() {
+        BOOST_LOG_OWL(trace) << "ImGuiService::sendQuery() before";
+        boost::asio::post(ioc_, [this, self = shared_from_this()]() {
+            auto m = boost::make_shared<OwlMailDefine::MailControl2Multicast::element_type>();
+
+            m->cmd = OwlMailDefine::MulticastCmd::query;
+            m->callbackRunner = [](OwlMailDefine::MailMulticast2Control &&data) {
+                // ignore
+                boost::ignore_unused(data);
+            };
+
+            BOOST_LOG_OWL(trace) << "ImGuiService::sendQuery() send";
+            mailbox_mc_->sendA2B(std::move(m));
+        });
+    }
+
 } // OwlImGuiService

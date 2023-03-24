@@ -4,11 +4,14 @@
 
 #include "../MemoryBoost.h"
 #include "../AsyncCallbackMailbox/AsyncCallbackMailbox.h"
+#include "../DiscoverState/DiscoverState.h"
 
 namespace OwlMailDefine {
 
     struct ImGui2Control;
     struct Control2ImGui {
+
+        boost::shared_ptr<OwlDiscoverState::DiscoverState> state;
 
         // ImGui2Control.runner = Control2ImGui.callbackRunner
         std::function<void(boost::shared_ptr<ImGui2Control>)> callbackRunner;

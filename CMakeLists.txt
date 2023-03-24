@@ -17,6 +17,71 @@ set(CMAKE_CXX_STANDARD 20)
 
 # ============================================================================================
 
+#set(DEBUG_log_multicast ON)
+#set(DEBUG_Mailbox ON)
+
+# ============================================================================================
+
+
+
+if (DEBUG_BOOST_ASIO)
+    add_definitions(-DBOOST_ASIO_ENABLE_HANDLER_TRACKING)
+endif (DEBUG_BOOST_ASIO)
+
+if (DEBUG_log_sp_tag)
+    add_definitions(-DDEBUG_log_sp_tag)
+endif (DEBUG_log_sp_tag)
+if (DEBUG_log_dtor)
+    add_definitions(-DDEBUG_log_dtor)
+endif (DEBUG_log_dtor)
+if (DEBUG_log_MAP)
+    add_definitions(-DDEBUG_log_MAP)
+endif (DEBUG_log_MAP)
+if (DEBUG_log_TAG)
+    add_definitions(-DDEBUG_log_TAG)
+endif (DEBUG_log_TAG)
+if (DEBUG_log_HTTP)
+    add_definitions(-DDEBUG_log_HTTP)
+endif (DEBUG_log_HTTP)
+if (DEBUG_log_SerialPortWrite)
+    add_definitions(-DDEBUG_log_SerialPortWrite)
+endif (DEBUG_log_SerialPortWrite)
+if (DEBUG_log_SerialPortWrite_dbg)
+    add_definitions(-DDEBUG_log_SerialPortWrite_dbg)    #
+endif (DEBUG_log_SerialPortWrite_dbg)
+if (DEBUG_log_JSON)
+    add_definitions(-DDEBUG_log_JSON)
+endif (DEBUG_log_JSON)
+if (DEBUG_log_multicast)
+    add_definitions(-DDEBUG_log_multicast)
+endif (DEBUG_log_multicast)
+if (DEBUG_log_SerialPortRead)
+    add_definitions(-DDEBUG_log_SerialPortRead)
+endif (DEBUG_log_SerialPortRead)
+
+if (DEBUG_TAG_INFO)
+    add_definitions(-DDEBUG_TAG_INFO)
+endif (DEBUG_TAG_INFO)
+
+if (DEBUG_IF_CHECK_POINT)
+    add_definitions(-DDEBUG_IF_CHECK_POINT)
+endif (DEBUG_IF_CHECK_POINT)
+
+if (DEBUG_ReceiveMailRepeat)
+    add_definitions(-DDEBUG_ReceiveMailRepeat)
+endif (DEBUG_ReceiveMailRepeat)
+
+if (DEBUG_Mailbox)
+    add_definitions(-DDEBUG_AsyncCallbackMailbox)
+endif (DEBUG_Mailbox)
+if (DEBUG_NoStateReader)
+    add_definitions(-DDEBUG_DisableStateReader)
+endif (DEBUG_NoStateReader)
+
+
+
+
+# ============================================================================================
 
 # https://www.boost.org/doc/libs/1_81_0/libs/assert/doc/html/assert.html
 add_definitions(-DBOOST_ENABLE_ASSERT_HANDLER)  #
@@ -30,7 +95,7 @@ option(USE_DYNAMIC_BOOST "Config USE_DYNAMIC_BOOST")
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     message(STATUS "enable -O1 when debug to resolve 'string table overflow at offset' 'too big' error on mingw")
     # -O1 to resolve "string table overflow at offset" error on mingw
-    add_definitions(-Wall -Wextra -O1 -g)
+#    add_definitions(-Wall -Wextra -O1 -g)
 endif ()
 
 set(CMAKE_THREAD_PREFER_PTHREAD ON)

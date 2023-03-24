@@ -58,50 +58,37 @@ namespace OwlMultiCast {
                                        << " " << boost::json::serialize(json_v);
 
         auto multiCastFlag = get(json_v.as_object(), "MultiCast", std::string{});
-        if (multiCastFlag != "Query") {
-            if (multiCastFlag == "Notice") {
-                // simple ignore Notice package, it many come from self or neighbor
-                do_response();
-                return;
-            }
+        if (multiCastFlag == "Query") {
+            // simple ignore self loop package, it many come from self or neighbor
             // ignore it
-            BOOST_LOG_OWL(trace_multicast) << "MultiCast do_receive_json() (multiCastFlag != Query) , ignore";
-            do_response();
+            do_receive();
             return;
         }
-        // now we receive a Query package, so we need response it
-        BOOST_LOG_OWL(trace) << "MultiCast do_receive_json() we receive a Query package come from: "
+        if (!(multiCastFlag == "Response" || multiCastFlag == "Notice")) {
+            // some other unknown package
+            BOOST_LOG_OWL(trace_multicast) << "MultiCast do_receive_json() some other unknown package , ignore";
+            do_receive();
+            return;
+        }
+        // now we receive a package
+        BOOST_LOG_OWL(trace) << "MultiCast do_receive_json() we receive a " << multiCastFlag << " package come from: "
                              << "receiver_endpoint_ "
                              << receiver_endpoint_.address() << ":" << receiver_endpoint_.port();
 
-        // TODO response_message_
-        response_message_ = R"({"MultiCast":"Response"})";
-        do_response();
-    }
+        {
+            auto state = boost::make_shared<OwlDiscoverState::DiscoverState>();
+            auto m = boost::make_shared<OwlMailDefine::MailControl2ImGui::element_type>();
 
-    void MultiCast::do_response() {
+            state->items.emplace_back(
+                    receiver_endpoint_.address().to_string(),
+                    receiver_endpoint_.port()
+            );
 
-        BOOST_LOG_OWL(trace_multicast) << "MultiCast do_response() "
-                                       << "receiver_endpoint_ "
-                                       << receiver_endpoint_.address() << ":" << receiver_endpoint_.port()
-                                       << " " << response_message_;
+            m->state = std::move(state);
+            mailbox_ig_->sendA2B(std::move(m));
+        }
 
-        sender_socket_.async_send_to(
-                boost::asio::buffer(response_message_), receiver_endpoint_,
-                [this, sef = shared_from_this()](boost::system::error_code ec, std::size_t /*length*/) {
-                    if (!ec) {
-                        do_receive();
-                        return;
-                    }
-                    if (ec == boost::asio::error::operation_aborted) {
-                        BOOST_LOG_OWL(trace_multicast) << "MultiCast do_response() ec operation_aborted";
-                        return;
-                    }
-                    if (ec) {
-                        BOOST_LOG_OWL(error) << "MultiCast do_response() ec " << ec;
-                        return;
-                    }
-                });
+        do_receive();
     }
 
 
@@ -109,14 +96,13 @@ namespace OwlMultiCast {
 
 
     void MultiCast::do_send() {
+        BOOST_LOG_OWL(trace_multicast) << "MultiCast::do_send()";
 
-        timer_.cancel();
         sender_socket_.async_send_to(
                 boost::asio::buffer(static_send_message_), sender_endpoint_,
                 [this, sef = shared_from_this()](boost::system::error_code ec, std::size_t /*length*/) {
                     if (!ec) {
                         BOOST_LOG_OWL(trace_multicast) << "MultiCast do_send() wait to send next";
-                        do_timeout();
                         return;
                     }
                     if (ec == boost::asio::error::operation_aborted) {
@@ -130,24 +116,26 @@ namespace OwlMultiCast {
                 });
     }
 
-    void MultiCast::do_timeout() {
-        timer_.expires_after(std::chrono::seconds(multicast_interval_));
-        timer_.async_wait(
-                [this, sef = shared_from_this()](boost::system::error_code ec) {
-                    timer_.cancel();
-                    if (!ec) {
-                        BOOST_LOG_OWL(trace_multicast) << "MultiCast do_timeout() to send next";
-                        do_send();
-                    }
-                    if (ec == boost::asio::error::operation_aborted) {
-                        BOOST_LOG_OWL(trace_multicast) << "MultiCast do_timeout() ec operation_aborted";
-                        return;
-                    }
-                    if (ec) {
-                        BOOST_LOG_OWL(error) << "MultiCast do_timeout() ec " << ec;
-                        return;
-                    }
+    void MultiCast::mailControl(OwlMailDefine::MailControl2Multicast &&data) {
+        auto m = boost::make_shared<OwlMailDefine::MailMulticast2Control::element_type>();
+        m->runner = data->callbackRunner;
+
+        BOOST_LOG_OWL(trace) << "MultiCast::mailControl ";
+
+        switch (data->cmd) {
+            case OwlMailDefine::MulticastCmd::query:
+                boost::asio::dispatch(ioc_, [this, self = shared_from_this()]() {
+                    BOOST_LOG_OWL(trace) << "MultiCast::mailControl OwlMailDefine::MulticastCmd::query";
+                    do_send();
                 });
+                break;
+            default:
+                BOOST_LOG_OWL(error) << "MultiCast::mailControl switch (data->cmd) default";
+                break;
+        }
+
+        mailbox_mc_->sendB2A(std::move(m));
     }
+
 
 } // OwlMultiCast

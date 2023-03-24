@@ -28,6 +28,11 @@ namespace OwlImGuiService {
                 OwlMailDefine::ControlMulticastMailbox &&mailbox_mc
         );
 
+        ~ImGuiService() {
+            mailbox_mc_->receiveB2A(nullptr);
+            mailbox_ig_->receiveA2B(nullptr);
+        }
+
     private:
         boost::asio::io_context &ioc_;
         boost::shared_ptr<OwlConfigLoader::ConfigLoader> config_;
@@ -40,6 +45,10 @@ namespace OwlImGuiService {
         void start();
 
         void clear();
+
+        void sendQuery();
+
+    private:
 
     };
 

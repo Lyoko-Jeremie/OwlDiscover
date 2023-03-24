@@ -42,6 +42,7 @@ struct ThreadCallee {
         } catch (int e) {
             tg.interrupt_all();
             BOOST_LOG_OWL(error) << "ThreadCallee catch (int) exception: " << e;
+            OwlImGuiService::safe_exit();
             return -1;
         } catch (boost::exception &e) {
             tg.interrupt_all();
@@ -49,10 +50,12 @@ struct ThreadCallee {
             BOOST_LOG_OWL(error) << "ThreadCallee catch std::exception :"
                                  << "\n diag: " << boost::diagnostic_information(e)
                                  << "\n what: " << dynamic_cast<std::exception const &>(e).what();
+            OwlImGuiService::safe_exit();
             return -1;
         } catch (const std::exception &e) {
             tg.interrupt_all();
             BOOST_LOG_OWL(error) << "ThreadCallee catch std::exception: " << e.what();
+            OwlImGuiService::safe_exit();
             return -1;
         } catch (...) {
             tg.interrupt_all();
@@ -60,6 +63,7 @@ struct ThreadCallee {
             BOOST_LOG_OWL(error) << "ThreadCallee catch (...) exception"
                                  << "\n current_exception_diagnostic_information : "
                                  << boost::current_exception_diagnostic_information();
+            OwlImGuiService::safe_exit();
             return -1;
         }
         return 0;
@@ -169,6 +173,7 @@ int main(int argc, char *argv[]) {
                 // stop all service on there
                 BOOST_LOG_OWL(info) << "stopping all service. ";
                 ioc_im_gui_service.stop();
+                ioc_multicast.stop();
                 ioc_keyboard.stop();
             }
                 break;
@@ -181,6 +186,7 @@ int main(int argc, char *argv[]) {
         BOOST_LOG_OWL(info) << "safe_exit_signal ";
         sig.clear();
         ioc_im_gui_service.stop();
+        ioc_multicast.stop();
         ioc_keyboard.stop();
     };
 
@@ -189,6 +195,7 @@ int main(int argc, char *argv[]) {
 
     boost::thread_group tg;
     tg.create_thread(ThreadCallee{ioc_im_gui_service, tg, "ioc_im_gui_service"});
+    tg.create_thread(ThreadCallee{ioc_multicast, tg, "ioc_multicast"});
     tg.create_thread(ThreadCallee{ioc_keyboard, tg, "ioc_keyboard"});
 
     BOOST_LOG_OWL(info) << "boost::thread_group running";

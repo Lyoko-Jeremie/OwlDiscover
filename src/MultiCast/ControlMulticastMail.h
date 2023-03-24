@@ -8,8 +8,14 @@
 
 namespace OwlMailDefine {
 
+    enum class MulticastCmd {
+        query
+    };
+
     struct Multicast2Control;
     struct Control2Multicast {
+
+        MulticastCmd cmd;
 
         // Multicast2Control.runner = Control2Multicast.callbackRunner
         std::function<void(boost::shared_ptr<Multicast2Control>)> callbackRunner;
@@ -21,10 +27,10 @@ namespace OwlMailDefine {
 
     using ControlMulticastMailbox =
             boost::shared_ptr<
-            OwlAsyncCallbackMailbox::AsyncCallbackMailbox<
-                    Control2Multicast,
-                    Multicast2Control
-            >
+                    OwlAsyncCallbackMailbox::AsyncCallbackMailbox<
+                            Control2Multicast,
+                            Multicast2Control
+                    >
             >;
 
     using MailControl2Multicast = ControlMulticastMailbox::element_type::A2B_t;

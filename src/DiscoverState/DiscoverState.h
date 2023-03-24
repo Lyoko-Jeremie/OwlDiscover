@@ -8,14 +8,25 @@
 #include <utility>
 #include "../MemoryBoost.h"
 #include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/lexical_cast.hpp>
 
 namespace OwlDiscoverState {
 
     struct DiscoverStateItem {
+        struct IP {
+        };
         std::string ip;
         int port;
-        boost::posix_time::ptime lastTime;
         boost::posix_time::ptime firstTime;
+        boost::posix_time::ptime lastTime;
+
+        std::string cacheFirstTime;
+        std::string cacheLastTime;
+        std::string cacheDuration;
+
+        auto operator<=>(const DiscoverStateItem &o) const {
+            return ip <=> o.ip;
+        }
 
         DiscoverStateItem(
                 std::string ip_,
@@ -23,6 +34,13 @@ namespace OwlDiscoverState {
         ) : ip(std::move(ip_)), port(port_) {
             firstTime = boost::posix_time::microsec_clock::local_time();
             lastTime = boost::posix_time::microsec_clock::local_time();
+            updateCache();
+        }
+
+        void updateCache() {
+            cacheFirstTime = getTimeString(firstTime);
+            cacheLastTime = getTimeString(lastTime);
+            cacheDuration = boost::lexical_cast<std::string>(calcDuration());
         }
 
         long long calcDuration() {
