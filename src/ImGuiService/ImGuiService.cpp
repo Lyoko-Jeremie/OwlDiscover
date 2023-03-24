@@ -220,8 +220,9 @@ namespace OwlImGuiService {
                     BOOST_LOG_OWL(trace) << "ImGuiServiceImpl::new_state find ";
                     BOOST_LOG_OWL(trace) << "ImGuiServiceImpl::new_state find " << (it == accIp.end());
                     BOOST_LOG_OWL(trace) << "ImGuiServiceImpl::new_state find " << (it == accIpEnd);
-                    if (it == accIpEnd) {
+                    if (it != accIpEnd) {
                         // update
+                        BOOST_LOG_OWL(trace) << "ImGuiServiceImpl::new_state update ";
                         BOOST_LOG_OWL(trace) << "ImGuiServiceImpl::new_state update " << it->ip;
                         accIp.modify(it, [&a](OwlDiscoverState::DiscoverStateItem &n) {
                             n.lastTime = a.lastTime;
@@ -230,6 +231,7 @@ namespace OwlImGuiService {
                         });
                     } else {
                         // insert
+                        BOOST_LOG_OWL(trace) << "ImGuiServiceImpl::new_state insert ";
                         BOOST_LOG_OWL(trace) << "ImGuiServiceImpl::new_state insert " << a.ip;
                         auto b = a;
                         b.updateCache();
