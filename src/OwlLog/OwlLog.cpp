@@ -165,7 +165,7 @@ namespace OwlLog {
                 #endif // DEBUG_log_multicast
                 #ifndef DEBUG_log_SerialPortRead
                 && severity != severity_level::trace_cmd_sp_r
-#endif // DEBUG_log_SerialPortRead
+                #endif // DEBUG_log_SerialPortRead
         );
 
 //        BOOST_LOG_OWL(info_VSERION)
