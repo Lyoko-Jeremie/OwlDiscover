@@ -359,7 +359,7 @@ namespace OwlImGuiService {
                         ImGui::SetNextWindowSize(main_viewport->WorkSize);
 
                         // Create a window called "Hello, world!" and append into it.
-                        if (ImGui::Begin("Hello, world!", &open, window_flags));
+                        if (ImGui::Begin("Hello, world!", &open, window_flags))
                         {
                             if (ImGui::BeginMenuBar()) {
                                 if (ImGui::BeginMenu("Menu")) {
