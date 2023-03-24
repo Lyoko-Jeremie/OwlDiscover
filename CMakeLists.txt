@@ -124,7 +124,7 @@ add_definitions(-DSDL_HINT_IME_SHOW_UI)
 include_directories(ExternLib/imgui ${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(ExternLib/imgui/backends ${CMAKE_CURRENT_SOURCE_DIR})
 
-add_definitions(-DIMGUI_USER_CONFIG="im_custom_config.h")
+add_definitions(-DIMGUI_USER_CONFIG="src/im_custom_config.h")
 
 set(DearImGuiFile
         ExternLib/imgui/imgui.h
