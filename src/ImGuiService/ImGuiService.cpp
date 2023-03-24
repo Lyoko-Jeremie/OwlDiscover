@@ -396,9 +396,12 @@ namespace OwlImGuiService {
     private:
 
 
-        bool show_demo_window = true;
+        bool show_demo_window = false;
         bool show_another_window = false;
         ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+
+        bool open = true;
+        ImGuiWindowFlags gui_window_flags = 0;
 
         boost::asio::awaitable<bool> co_main_loop(boost::shared_ptr<ImGuiServiceImpl> self) {
             boost::ignore_unused(self);
@@ -431,46 +434,30 @@ namespace OwlImGuiService {
                         }
                     }
 
-
                     // Start the Dear ImGui frame
                     ImGui_ImplDX11_NewFrame();
                     ImGui_ImplSDL2_NewFrame();
                     ImGui::NewFrame();
 
-                    if (show_demo_window)
+                    if (show_demo_window) {
                         ImGui::ShowDemoWindow(&show_demo_window);
+                    }
 
                     {
-                        static float f = 0.0f;
-                        static int counter = 0;
-                        static bool open = true;
-                        static ImGuiWindowFlags window_flags = 0;
-                        if (window_flags == 0) {
-                            window_flags |= ImGuiWindowFlags_NoMove;
-                            window_flags |= ImGuiWindowFlags_MenuBar;
-                            window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus;
-                            window_flags |= ImGuiWindowFlags_NoDecoration;
-                            window_flags |= ImGuiWindowFlags_NoSavedSettings;
+                        if (gui_window_flags == 0) {
+                            gui_window_flags |= ImGuiWindowFlags_NoMove;
+                            gui_window_flags |= ImGuiWindowFlags_MenuBar;
+                            gui_window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus;
+                            gui_window_flags |= ImGuiWindowFlags_NoDecoration;
+                            gui_window_flags |= ImGuiWindowFlags_NoSavedSettings;
                         }
 
-                        // We specify a default position/size in case there's no data in the .ini file.
                         const ImGuiViewport *main_viewport = ImGui::GetMainViewport();
-//            BOOST_LOG_TRIVIAL(trace) << "main_viewport "
-//                                     << main_viewport->Pos.x << " "
-//                                     << main_viewport->Pos.y << " "
-//                                     << main_viewport->Size.x << " "
-//                                     << main_viewport->Size.y << " "
-//                                     << main_viewport->WorkPos.x << " "
-//                                     << main_viewport->WorkPos.y << " "
-//                                     << main_viewport->WorkSize.x << " "
-//                                     << main_viewport->WorkSize.y << " "
-//                                     << "";
 
                         ImGui::SetNextWindowPos(main_viewport->WorkPos);
                         ImGui::SetNextWindowSize(main_viewport->WorkSize);
 
-                        // Create a window called "Hello, world!" and append into it.
-                        if (ImGui::Begin("Hello, world!", &open, window_flags)) {
+                        if (ImGui::Begin("Hello, world!", &open, gui_window_flags)) {
                             if (ImGui::BeginMenuBar()) {
                                 if (ImGui::BeginMenu("Menu")) {
                                     if (ImGui::MenuItem("Quit", "Alt+F4")) {
@@ -481,24 +468,9 @@ namespace OwlImGuiService {
                                 ImGui::EndMenuBar();
                             }
 
-//            ImGui::Text("有些有用的文字");   // Display some text (you can use a format strings too)
-//            ImGui::Checkbox(u8"Demo 窗口"_C, &show_demo_window);      // Edit bools storing our window open/close state
-//            ImGui::SameLine();
-//            ImGui::Checkbox(u8"Another 窗口"_C, &show_another_window);
-//
-//            ImGui::SliderFloat(u8"浮点"_C, &f, 0.0f, 1.0f);  // Edit 1 float using a slider from 0.0f to 1.0f
-//            ImGui::ColorEdit3(u8"色彩"_C, (float *) &clear_color); // Edit 3 floats representing a color
-//
-//            // Buttons return true when clicked (most widgets return true when edited/activated)
-//            if (ImGui::Button(u8"按钮"_C))
-//                counter++;
-//            ImGui::SameLine();
-//            ImGui::Text(u8"计数 = %d"_C, counter);
-
-
-                            ImGui::Text("有些有用的文字");
-                            ImGui::SameLine();
-                            ImGui::Text("有些有用的文字");
+//                            ImGui::Text("有些有用的文字");
+//                            ImGui::SameLine();
+//                            ImGui::Text("有些有用的文字");
 
 
                             if (ImGui::Button("Query")) {
@@ -599,8 +571,6 @@ namespace OwlImGuiService {
                     g_pd3dDeviceContext->ClearRenderTargetView(g_mainRenderTargetView, clear_color_with_alpha);
                     ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 
-                    g_pSwapChain->Present(1, 0); // Present with vsync
-                    //g_pSwapChain->Present(0, 0); // Present without vsync
 
 
 
@@ -608,6 +578,9 @@ namespace OwlImGuiService {
                     // make a break for boost asio thread can handle another event
                     co_await boost::asio::post(executor, use_awaitable);
                     // ================================ ............ ================================
+
+                    g_pSwapChain->Present(1, 0); // Present with vsync
+                    //g_pSwapChain->Present(0, 0); // Present without vsync
 
                 }
 
