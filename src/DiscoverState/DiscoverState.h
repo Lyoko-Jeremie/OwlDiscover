@@ -32,7 +32,7 @@ namespace OwlDiscoverState {
                 int port_
         ) : ip(std::move(ip_)), port(port_) {
             firstTime = boost::posix_time::microsec_clock::local_time();
-            lastTime = boost::posix_time::microsec_clock::local_time();
+            lastTime = firstTime;
             updateCache();
         }
 
@@ -44,7 +44,7 @@ namespace OwlDiscoverState {
         [[nodiscard]] std::string calcDuration(boost::posix_time::ptime nowTime) const {
             auto a = (nowTime - lastTime);
             auto n = a.total_milliseconds();
-            return boost::lexical_cast<std::string>(std::abs(n));
+            return boost::lexical_cast<std::string>(std::abs(n) / 1000);
         }
 
         [[nodiscard]] std::string nowDuration() const {
@@ -58,7 +58,7 @@ namespace OwlDiscoverState {
         std::string getTimeString(boost::posix_time::ptime t) {
             auto s = boost::posix_time::to_iso_extended_string(t);
             if (s.size() > 10) {
-                s.at(10) = ' ';
+                s.at(10) = '_';
             }
             return s;
         }
