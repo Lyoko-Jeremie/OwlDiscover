@@ -12,6 +12,8 @@
 
 namespace OwlImGuiService {
 
+    void safe_exit();
+
     struct ImGuiServiceImpl;
 
     class ImGuiService : public boost::enable_shared_from_this<ImGuiService> {

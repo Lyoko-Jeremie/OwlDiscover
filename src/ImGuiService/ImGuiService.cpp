@@ -125,6 +125,9 @@ namespace OwlImGuiService {
                 auto r = init();
                 if (r) {
                     BOOST_LOG_OWL(error) << "ImGuiServiceImpl init error " << r;
+                    clear();
+                    safe_exit();
+                    return;
                 }
             });
         }
@@ -163,7 +166,7 @@ namespace OwlImGuiService {
 
             // Setup window
             SDL_WindowFlags window_flags = (SDL_WindowFlags) (SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
-            window = SDL_CreateWindow("Dear ImGui SDL2+DirectX11 example", SDL_WINDOWPOS_CENTERED,
+            window = SDL_CreateWindow("OwlDiscover", SDL_WINDOWPOS_CENTERED,
                                       SDL_WINDOWPOS_CENTERED, 1280, 720, window_flags);
             SDL_SysWMinfo wmInfo;
             SDL_VERSION(&wmInfo.version);
@@ -248,10 +251,12 @@ namespace OwlImGuiService {
                             if (r) {
                                 BOOST_LOG_OWL(trace_cmd_tag) << "ImGuiServiceImpl run() ok";
                                 clear();
+                                safe_exit();
                                 return;
                             } else {
                                 BOOST_LOG_OWL(trace_cmd_tag) << "ImGuiServiceImpl run() error";
                                 clear();
+                                safe_exit();
                                 return;
                             }
                         } else {
@@ -278,6 +283,8 @@ namespace OwlImGuiService {
                             }
                             BOOST_LOG_OWL(error) << "ImGuiServiceImpl::process_tag_info " << what;
 
+                            clear();
+                            safe_exit();
                         }
 
                     });

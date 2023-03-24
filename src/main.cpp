@@ -1,14 +1,15 @@
 #include <vector>
 #include <boost/assert.hpp>
-#include <boost/log/trivial.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/core/ignore_unused.hpp>
 
 #include <SDL_main.h>
 
+#include "./OwlLog/OwlLog.h"
 #include "./MemoryBoost.h"
 #include <vector>
 #include <utility>
+#include <functional>
 #include <boost/asio.hpp>
 #include <boost/asio/signal_set.hpp>
 #include <boost/thread.hpp>
@@ -57,9 +58,21 @@ struct ThreadCallee {
     }
 };
 
+std::function<void()> safe_exit_signal;
 
+void OwlImGuiService::safe_exit() {
+    if (safe_exit_signal) {
+        safe_exit_signal();
+    }
+}
+
+#include <boost/log/trivial.hpp>
 int main(int, char **) {
-    BOOST_LOG_TRIVIAL(info) << "Hello, World!";
+
+    OwlLog::threadName = "main";
+    OwlLog::init_logging();
+//    BOOST_LOG_TRIVIAL(info) << "Hello, World!";
+    BOOST_LOG_OWL(info) << "Hello, World!";
 
     boost::asio::io_context ioc_im_gui_service;
     auto imGuiService = boost::make_shared<OwlImGuiService::ImGuiService>(
@@ -92,6 +105,12 @@ int main(int, char **) {
                 break;
         }
     });
+    safe_exit_signal = [&]() {
+        BOOST_LOG_OWL(info) << "safe_exit_signal ";
+        sig.clear();
+        ioc_im_gui_service.stop();
+        ioc_keyboard.stop();
+    };
 
     size_t processor_count = boost::thread::hardware_concurrency();
     BOOST_LOG_OWL(info) << "processor_count: " << processor_count;
