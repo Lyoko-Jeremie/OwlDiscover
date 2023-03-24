@@ -201,13 +201,13 @@ namespace OwlImGuiService {
             BOOST_ASSERT(s);
             BOOST_ASSERT(!weak_from_this().expired());
 
-            BOOST_LOG_OWL(trace) << "ImGuiServiceImpl::new_state before";
+//            BOOST_LOG_OWL(trace) << "ImGuiServiceImpl::new_state before";
 
             boost::asio::dispatch(ioc_, [this, s, self = shared_from_this()]() {
                 BOOST_ASSERT(s);
                 BOOST_ASSERT(self);
 
-                BOOST_LOG_OWL(trace) << "ImGuiServiceImpl::new_state update";
+//                BOOST_LOG_OWL(trace) << "ImGuiServiceImpl::new_state update";
 
 //                return;
 
@@ -217,13 +217,13 @@ namespace OwlImGuiService {
                     BOOST_LOG_OWL(trace) << "ImGuiServiceImpl::new_state a " << a.ip;
 
                     auto it = accIp.find(a.ip);
-                    BOOST_LOG_OWL(trace) << "ImGuiServiceImpl::new_state find ";
-                    BOOST_LOG_OWL(trace) << "ImGuiServiceImpl::new_state find " << (it == accIp.end());
-                    BOOST_LOG_OWL(trace) << "ImGuiServiceImpl::new_state find " << (it == accIpEnd);
+//                    BOOST_LOG_OWL(trace) << "ImGuiServiceImpl::new_state find ";
+//                    BOOST_LOG_OWL(trace) << "ImGuiServiceImpl::new_state find " << (it == accIp.end());
+//                    BOOST_LOG_OWL(trace) << "ImGuiServiceImpl::new_state find " << (it == accIpEnd);
                     if (it != accIpEnd) {
                         // update
-                        BOOST_LOG_OWL(trace) << "ImGuiServiceImpl::new_state update ";
-                        BOOST_LOG_OWL(trace) << "ImGuiServiceImpl::new_state update " << it->ip;
+//                        BOOST_LOG_OWL(trace) << "ImGuiServiceImpl::new_state update ";
+//                        BOOST_LOG_OWL(trace) << "ImGuiServiceImpl::new_state update " << it->ip;
                         accIp.modify(it, [&a](OwlDiscoverState::DiscoverStateItem &n) {
                             n.lastTime = a.lastTime;
                             n.port = a.port;
@@ -231,20 +231,20 @@ namespace OwlImGuiService {
                         });
                     } else {
                         // insert
-                        BOOST_LOG_OWL(trace) << "ImGuiServiceImpl::new_state insert ";
-                        BOOST_LOG_OWL(trace) << "ImGuiServiceImpl::new_state insert " << a.ip;
+//                        BOOST_LOG_OWL(trace) << "ImGuiServiceImpl::new_state insert ";
+//                        BOOST_LOG_OWL(trace) << "ImGuiServiceImpl::new_state insert " << a.ip;
                         auto b = a;
                         b.updateCache();
-                        BOOST_LOG_OWL(trace) << "ImGuiServiceImpl::new_state add " << b.ip;
+//                        BOOST_LOG_OWL(trace) << "ImGuiServiceImpl::new_state add " << b.ip;
                         items.emplace_back(b);
                     }
                 }
 
-                BOOST_LOG_OWL(trace) << "ImGuiServiceImpl::new_state sort";
+//                BOOST_LOG_OWL(trace) << "ImGuiServiceImpl::new_state sort";
                 // re short it
                 items.sort();
 
-                BOOST_LOG_OWL(trace) << "ImGuiServiceImpl::new_state end";
+//                BOOST_LOG_OWL(trace) << "ImGuiServiceImpl::new_state end";
             });
 
         }
@@ -525,20 +525,41 @@ namespace OwlImGuiService {
                                 auto &accRc = items.get<DiscoverStateItemContainerRandomAccess>();
                                 if (accRc.empty()) {
                                     ImGui::Text("Empty");
+                                } else {
+//                                    ImGui::Text("I ");
+//                                    ImGui::SameLine();
+//                                    auto s = std::string{};
+//                                    s.resize(16, ' ');
+//                                    ImGui::Text(("IP:PORT" + s).c_str());
+//                                    ImGui::SameLine();
+//                                    ImGui::Text(("FirstTime" + s).c_str());
+//                                    ImGui::SameLine();
+//                                    ImGui::Text(("LastTime" + s).c_str());
+//                                    ImGui::SameLine();
+//                                    ImGui::Text(("LastSee" + s).c_str());
+//                                    ImGui::Text((std::string{}
+//                                                 + "I\t"
+//                                                 + "IP:PORT\t\t\t\t\t\t"
+//                                                 + "FirstTime\t\t\t\t\t\t"
+//                                                 + "LastTime\t\t\t\t\t\t"
+//                                                 + "LastSee\t\t\t\t\t\t").c_str());
+//                                    ImGui::SameLine();
+//                                    ImGui::Button("Land");
+//                                    ImGui::SameLine();
+//                                    ImGui::Button("Stop");
+//                                    ImGui::SameLine();
+//                                    ImGui::Button("Delete");
                                 }
                                 for (size_t i = 0; i < accRc.size(); ++i) {
                                     auto &n = accRc.at(i);
-                                    ImGui::Text(boost::lexical_cast<std::string>(i).c_str());
-                                    ImGui::SameLine();
-                                    ImGui::Text(n.ip.c_str());
-                                    ImGui::SameLine();
-                                    ImGui::Text(boost::lexical_cast<std::string>(n.port).c_str());
-                                    ImGui::SameLine();
-                                    ImGui::Text(n.cacheFirstTime.c_str());
-                                    ImGui::SameLine();
-                                    ImGui::Text(n.cacheLastTime.c_str());
-                                    ImGui::SameLine();
-                                    ImGui::Text(n.nowDuration().c_str());
+                                    ImGui::Text((
+                                                        boost::lexical_cast<std::string>(i) + "\t"
+                                                        + n.ip + std::string{":"} +
+                                                        boost::lexical_cast<std::string>(n.port) + "\t"
+                                                        + n.cacheFirstTime + "\t"
+                                                        + n.cacheLastTime + "\t"
+                                                        + n.nowDuration() + "\t"
+                                                ).c_str());
                                     ImGui::SameLine();
                                     ImGui::Button("Land");
                                     ImGui::SameLine();
@@ -621,10 +642,10 @@ namespace OwlImGuiService {
 
                 BOOST_ASSERT(impl);
                 if (data->state) {
-                    BOOST_LOG_OWL(trace) << "ImGuiService::ImGuiService (data->state)";
+//                    BOOST_LOG_OWL(trace) << "ImGuiService::ImGuiService (data->state)";
                     impl->new_state(data->state);
                 } else {
-                    BOOST_LOG_OWL(error) << "ImGuiService::ImGuiService receiveA2B (data->state)";
+//                    BOOST_LOG_OWL(error) << "ImGuiService::ImGuiService receiveA2B (data->state)";
                 }
 
                 mailbox_ig_->sendB2A(std::move(m));
@@ -648,7 +669,7 @@ namespace OwlImGuiService {
     }
 
     void ImGuiService::sendQuery() {
-        BOOST_LOG_OWL(trace) << "ImGuiService::sendQuery() before";
+//        BOOST_LOG_OWL(trace) << "ImGuiService::sendQuery() before";
         boost::asio::post(ioc_, [this, self = shared_from_this()]() {
             auto m = boost::make_shared<OwlMailDefine::MailControl2Multicast::element_type>();
 
@@ -658,7 +679,7 @@ namespace OwlImGuiService {
                 boost::ignore_unused(data);
             };
 
-            BOOST_LOG_OWL(trace) << "ImGuiService::sendQuery() send";
+//            BOOST_LOG_OWL(trace) << "ImGuiService::sendQuery() send";
             mailbox_mc_->sendA2B(std::move(m));
         });
     }
