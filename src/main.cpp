@@ -1,5 +1,5 @@
 #include <vector>
-#include <boost/assert.hpp>
+#include <iostream>
 #include <boost/lexical_cast.hpp>
 #include <boost/core/ignore_unused.hpp>
 
@@ -16,6 +16,11 @@
 #include <boost/program_options.hpp>
 
 #include "./ImGuiService/ImGuiService.h"
+#include "./ConfigLoader/ConfigLoader.h"
+
+#ifndef DEFAULT_CONFIG
+#define DEFAULT_CONFIG R"(config.json)"
+#endif // DEFAULT_CONFIG
 
 struct ThreadCallee {
     boost::asio::io_context &ioc;
@@ -66,13 +71,60 @@ void OwlImGuiService::safe_exit() {
     }
 }
 
-#include <boost/log/trivial.hpp>
-int main(int, char **) {
+int main(int argc, char *argv[]) {
 
     OwlLog::threadName = "main";
     OwlLog::init_logging();
-//    BOOST_LOG_TRIVIAL(info) << "Hello, World!";
     BOOST_LOG_OWL(info) << "Hello, World!";
+
+    // parse start params
+    std::string config_file;
+    boost::program_options::options_description desc("options");
+    desc.add_options()
+            ("config,c", boost::program_options::value<std::string>(&config_file)->
+                    default_value(DEFAULT_CONFIG)->
+                    value_name("CONFIG"), "specify config file")
+            ("help,h", "print help message")
+            ("version,v", "print version and build info");
+    boost::program_options::positional_options_description pd;
+    pd.add("config", 1);
+    boost::program_options::variables_map vMap;
+    boost::program_options::store(
+            boost::program_options::command_line_parser(argc, argv)
+                    .options(desc)
+                    .positional(pd)
+                    .run(), vMap);
+    boost::program_options::notify(vMap);
+    if (vMap.count("help")) {
+        std::cout << "usage: " << argv[0] << " [[-c] CONFIG]" << "\n" << std::endl;
+
+        std::cout << "    OwlAccessTerminal  Copyright (C) 2023 \n"
+                  << "\n" << std::endl;
+
+        std::cout << desc << std::endl;
+        return 0;
+    }
+    if (vMap.count("version")) {
+        std::cout <<
+                  ", ProgramVersion " << ProgramVersion <<
+                  ", CodeVersion_GIT_REV " << CodeVersion_GIT_REV <<
+                  ", CodeVersion_GIT_TAG " << CodeVersion_GIT_TAG <<
+                  ", CodeVersion_GIT_BRANCH " << CodeVersion_GIT_BRANCH <<
+                  ", Boost " << BOOST_LIB_VERSION <<
+                  ", BUILD_DATETIME " << CodeVersion_BUILD_DATETIME
+                  << std::endl;
+        return 0;
+    }
+
+    BOOST_LOG_OWL(info) << "config_file: " << config_file;
+
+
+
+    // load config
+    auto config = boost::make_shared<OwlConfigLoader::ConfigLoader>();
+    config->init(config_file);
+    config->print();
+
 
     boost::asio::io_context ioc_im_gui_service;
     auto imGuiService = boost::make_shared<OwlImGuiService::ImGuiService>(

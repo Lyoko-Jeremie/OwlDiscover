@@ -249,12 +249,12 @@ namespace OwlImGuiService {
 
                         if (!e) {
                             if (r) {
-                                BOOST_LOG_OWL(trace_cmd_tag) << "ImGuiServiceImpl run() ok";
+                                BOOST_LOG_OWL(trace) << "ImGuiServiceImpl run() ok";
                                 clear();
                                 safe_exit();
                                 return;
                             } else {
-                                BOOST_LOG_OWL(trace_cmd_tag) << "ImGuiServiceImpl run() error";
+                                BOOST_LOG_OWL(trace) << "ImGuiServiceImpl run() error";
                                 clear();
                                 safe_exit();
                                 return;

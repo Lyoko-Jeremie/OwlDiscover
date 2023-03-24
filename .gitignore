@@ -127,3 +127,5 @@ _deps
 cmake-build-debug
 cmake-build-debug*/**/*
 SourceHanSansCN
+
+/src/VERSION/CodeVersion.h

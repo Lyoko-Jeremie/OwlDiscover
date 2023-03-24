@@ -75,12 +75,9 @@ message(STATUS "Boost_VERSION: ${Boost_VERSION}")
 message(STATUS "CMAKE_THREAD_LIBS_INIT: ${CMAKE_THREAD_LIBS_INIT}")
 
 
-
-
-
 # ============================================================================================
 
-set(CMAKE_PREFIX_PATH  "h:/CodeLib/freetype-2.9_x64_v11p3-install/lib/cmake/freetype/" ${CMAKE_PREFIX_PATH})
+set(CMAKE_PREFIX_PATH "h:/CodeLib/freetype-2.9_x64_v11p3-install/lib/cmake/freetype/" ${CMAKE_PREFIX_PATH})
 
 find_package(Freetype REQUIRED)
 
@@ -93,7 +90,7 @@ message(STATUS "FREETYPE_INCLUDE_DIR_freetype2: ${FREETYPE_INCLUDE_DIR_freetype2
 
 # ============================================================================================
 
-set(CMAKE_PREFIX_PATH  "h:/CodeLib/harfbuzz-7.1.0_x64_v11p3-install/lib/cmake/harfbuzz/" ${CMAKE_PREFIX_PATH})
+set(CMAKE_PREFIX_PATH "h:/CodeLib/harfbuzz-7.1.0_x64_v11p3-install/lib/cmake/harfbuzz/" ${CMAKE_PREFIX_PATH})
 
 find_package(harfbuzz REQUIRED)
 
@@ -102,7 +99,6 @@ message(STATUS "FREETYPE_FOUND: ${FREETYPE_FOUND}")
 add_definitions(-DIMGUI_ENABLE_FREETYPE)
 
 # ============================================================================================
-
 
 
 find_package(SDL2 REQUIRED)
@@ -149,6 +145,63 @@ set(DearImGuiFile
 
 # ============================================================================================
 
+# ============================================================================================
+
+
+# https://www.mattkeeter.com/blog/2018-01-06-versioning/
+execute_process(COMMAND git log --pretty=format:'%H' -n 1
+        OUTPUT_VARIABLE GIT_REV
+        ERROR_QUIET)
+
+# Check whether we got any revision (which isn't
+# always the case, e.g. when someone downloaded a zip
+# file from Github instead of a checkout)
+if ("${GIT_REV}" STREQUAL "")
+    set(GIT_REV "N/A")
+    set(GIT_DIFF "")
+    set(GIT_TAG "N/A")
+    set(GIT_BRANCH "N/A")
+else ()
+    execute_process(
+            COMMAND bash -c "git diff --quiet --exit-code || echo +"
+            OUTPUT_VARIABLE GIT_DIFF)
+    execute_process(
+            COMMAND git describe --exact-match --tags
+            OUTPUT_VARIABLE GIT_TAG ERROR_QUIET)
+    execute_process(
+            COMMAND git rev-parse --abbrev-ref HEAD
+            OUTPUT_VARIABLE GIT_BRANCH)
+
+    string(STRIP "${GIT_REV}" GIT_REV)
+    #    string(SUBSTRING "${GIT_REV}" 1 7 GIT_REV)
+    string(STRIP "${GIT_DIFF}" GIT_DIFF)
+    string(STRIP "${GIT_TAG}" GIT_TAG)
+    string(STRIP "${GIT_BRANCH}" GIT_BRANCH)
+endif ()
+
+# https://gitlab.kitware.com/cmake/cmake/-/issues/18431
+string(TIMESTAMP currentSeconds "%s")
+message(STATUS "currentSeconds = ${currentSeconds}")
+
+string(TIMESTAMP BUILD_DATETIME "%Y-%m-%d %H:%M:%S")
+message(STATUS "BUILD_DATETIME = ${BUILD_DATETIME}")
+
+set(VERSION "const char* GIT_REV=\"git-[${GIT_REV}-${GIT_DIFF}]\";
+const char* GIT_TAG=\"${GIT_TAG}\";
+const char* GIT_BRANCH=\"${GIT_BRANCH}\";
+const char* BUILD_DATETIME=\"${BUILD_DATETIME}\";
+")
+
+message(STATUS "VERSION: ${VERSION}")
+
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/src/VERSION/CodeVersion.h.in
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/VERSION/CodeVersion.h)
+
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+
+
+# ============================================================================================
+
 
 message(STATUS "CMAKE_SOURCE_DIR: ${CMAKE_SOURCE_DIR}")
 
@@ -157,10 +210,20 @@ add_executable(${ProjectMainName}
         ${DearImGuiFile}
         src/main.cpp
         src/OwlLog/BoostAssertionFailed.cpp
+        src/VERSION/ProgramVersion.h
+        src/VERSION/CodeVersion.h
         src/OwlLog/OwlLog.h
         src/OwlLog/OwlLog.cpp
+        src/ConfigLoader/ConfigLoader.h
+        src/ConfigLoader/ConfigLoader.cpp
+        src/AsyncCallbackMailbox/AsyncCallbackMailbox.h
         src/ImGuiService/ImGuiService.cpp
-        src/ImGuiService/ImGuiService.h)
+        src/ImGuiService/ImGuiService.h
+        src/ImGuiService/ControlImGuiMailBox.h
+        src/MultiCast/MultiCast.h
+        src/MultiCast/MultiCast.cpp
+        src/MultiCast/ControlMulticastMail.h
+        )
 
 # ============================================================================================
 
