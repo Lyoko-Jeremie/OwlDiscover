@@ -22,7 +22,6 @@ namespace OwlDiscoverState {
 
         std::string cacheFirstTime;
         std::string cacheLastTime;
-        std::string cacheDuration;
 
         auto operator<=>(const DiscoverStateItem &o) const {
             return ip <=> o.ip;
@@ -40,13 +39,20 @@ namespace OwlDiscoverState {
         void updateCache() {
             cacheFirstTime = getTimeString(firstTime);
             cacheLastTime = getTimeString(lastTime);
-            cacheDuration = boost::lexical_cast<std::string>(calcDuration());
         }
 
-        long long calcDuration() {
-            auto a = (lastTime - firstTime);
+        [[nodiscard]] std::string calcDuration(boost::posix_time::ptime nowTime) const {
+            auto a = (nowTime - lastTime);
             auto n = a.total_milliseconds();
-            return std::abs(n);
+            return boost::lexical_cast<std::string>(std::abs(n));
+        }
+
+        [[nodiscard]] std::string nowDuration() const {
+            return calcDuration(now());
+        }
+
+        [[nodiscard]] boost::posix_time::ptime now() const {
+            return boost::posix_time::microsec_clock::local_time();
         }
 
         std::string getTimeString(boost::posix_time::ptime t) {

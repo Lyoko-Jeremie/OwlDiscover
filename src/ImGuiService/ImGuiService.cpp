@@ -538,7 +538,7 @@ namespace OwlImGuiService {
                                     ImGui::SameLine();
                                     ImGui::Text(n.cacheLastTime.c_str());
                                     ImGui::SameLine();
-                                    ImGui::Text(n.cacheDuration.c_str());
+                                    ImGui::Text(n.nowDuration().c_str());
                                     ImGui::SameLine();
                                     ImGui::Button("Land");
                                     ImGui::SameLine();
