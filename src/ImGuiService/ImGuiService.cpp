@@ -242,7 +242,21 @@ namespace OwlImGuiService {
 
 //                BOOST_LOG_OWL(trace) << "ImGuiServiceImpl::new_state sort";
                 // re short it
-                items.sort();
+//                items.sort();
+                auto now = OwlDiscoverState::DiscoverStateItem::now();
+                items.sort([&now](
+                        const OwlDiscoverState::DiscoverStateItem &a,
+                        const OwlDiscoverState::DiscoverStateItem &b
+                ) {
+                    auto at = a.calcDurationSecond(now);
+                    auto bt = b.calcDurationSecond(now);
+                    if (at == bt) {
+                        return a < b;
+                    }
+                    if (at < bt) {
+                        return true;
+                    }
+                });
 
 //                BOOST_LOG_OWL(trace) << "ImGuiServiceImpl::new_state end";
             });

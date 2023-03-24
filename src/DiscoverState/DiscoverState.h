@@ -43,15 +43,20 @@ namespace OwlDiscoverState {
 
         [[nodiscard]] std::string calcDuration(boost::posix_time::ptime nowTime) const {
             auto a = (nowTime - lastTime);
-            auto n = a.total_milliseconds();
-            return boost::lexical_cast<std::string>(std::abs(n) / 1000);
+            auto n = a.total_seconds();
+            return boost::lexical_cast<std::string>(std::abs(n));
+        }
+
+        [[nodiscard]] long long calcDurationSecond(boost::posix_time::ptime nowTime) const {
+            auto a = (nowTime - lastTime);
+            return a.total_seconds();
         }
 
         [[nodiscard]] std::string nowDuration() const {
             return calcDuration(now());
         }
 
-        [[nodiscard]] boost::posix_time::ptime now() const {
+        [[nodiscard]] static boost::posix_time::ptime now() {
             return boost::posix_time::microsec_clock::local_time();
         }
 
