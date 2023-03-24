@@ -15,8 +15,11 @@
 #include <boost/thread.hpp>
 #include <boost/program_options.hpp>
 
+#include "./ImGuiService/ControlImGuiMailBox.h"
 #include "./ImGuiService/ImGuiService.h"
 #include "./ConfigLoader/ConfigLoader.h"
+#include "./MultiCast/ControlMulticastMail.h"
+#include "./MultiCast/MultiCast.h"
 
 #ifndef DEFAULT_CONFIG
 #define DEFAULT_CONFIG R"(config.json)"
@@ -125,10 +128,27 @@ int main(int argc, char *argv[]) {
     config->init(config_file);
     config->print();
 
-
+    boost::asio::io_context ioc_multicast;
     boost::asio::io_context ioc_im_gui_service;
+
+    auto mailbox_control_multicast = boost::make_shared<OwlMailDefine::ControlMulticastMailbox::element_type>(
+            ioc_im_gui_service, ioc_multicast, "mailbox_control_multicast"
+    );
+    auto mailbox_control_im_gui = boost::make_shared<OwlMailDefine::ControlImGuiMailBox::element_type>(
+            ioc_multicast, ioc_im_gui_service, "mailbox_control_im_gui"
+    );
+    auto multiCastServer = boost::make_shared<OwlMultiCast::MultiCast>(
+            ioc_multicast,
+            config->shared_from_this(),
+            mailbox_control_multicast->shared_from_this(),
+            mailbox_control_im_gui->shared_from_this()
+    );
+    multiCastServer->start();
     auto imGuiService = boost::make_shared<OwlImGuiService::ImGuiService>(
-            ioc_im_gui_service
+            ioc_im_gui_service,
+            config->shared_from_this(),
+            mailbox_control_im_gui->shared_from_this(),
+            mailbox_control_multicast->shared_from_this()
     );
     imGuiService->start();
 

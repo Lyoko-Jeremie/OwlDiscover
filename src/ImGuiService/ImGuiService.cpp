@@ -476,7 +476,15 @@ namespace OwlImGuiService {
 
     };
 
-    ImGuiService::ImGuiService(boost::asio::io_context &ioc) : ioc_(ioc) {
+    ImGuiService::ImGuiService(
+            boost::asio::io_context &ioc,
+            boost::shared_ptr<OwlConfigLoader::ConfigLoader> config,
+            OwlMailDefine::ControlImGuiMailBox &&mailbox_ig,
+            OwlMailDefine::ControlMulticastMailbox &&mailbox_mc
+    ) : ioc_(ioc),
+        config_(std::move(config)),
+        mailbox_mc_(mailbox_mc),
+        mailbox_ig_(mailbox_ig) {
         impl = boost::make_shared<ImGuiServiceImpl>(ioc_);
     }
 

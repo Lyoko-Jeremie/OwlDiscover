@@ -11,6 +11,7 @@
 #include "../OwlLog/OwlLog.h"
 #include "../ConfigLoader/ConfigLoader.h"
 #include "./ControlMulticastMail.h"
+#include "../ImGuiService/ControlImGuiMailBox.h"
 
 namespace OwlMultiCast {
 
@@ -24,10 +25,12 @@ namespace OwlMultiCast {
         MultiCast(
                 boost::asio::io_context &ioc,
                 boost::shared_ptr<OwlConfigLoader::ConfigLoader> config,
-                OwlMailDefine::ControlMulticastMailbox &&mailbox
+                OwlMailDefine::ControlMulticastMailbox &&mailbox_mc,
+                OwlMailDefine::ControlImGuiMailBox &&mailbox_ig
         ) : ioc_(ioc),
             config_(std::move(config)),
-            mailbox_(mailbox),
+            mailbox_mc_(mailbox_mc),
+            mailbox_ig_(mailbox_ig),
             timer_(ioc_),
             sender_socket_(ioc_),
             listen_socket_(ioc_),
@@ -70,7 +73,8 @@ namespace OwlMultiCast {
     private:
         boost::asio::io_context &ioc_;
         boost::shared_ptr<OwlConfigLoader::ConfigLoader> config_;
-        OwlMailDefine::ControlMulticastMailbox mailbox_;
+        OwlMailDefine::ControlMulticastMailbox mailbox_mc_;
+        OwlMailDefine::ControlImGuiMailBox mailbox_ig_;
 
         int multicast_interval_ = 15;
         boost::asio::steady_timer timer_;
