@@ -32,27 +32,34 @@ namespace OwlMultiCast {
             mailbox_mc_(mailbox_mc),
             mailbox_ig_(mailbox_ig),
             sender_socket_(ioc_),
-            listen_socket_(ioc_),
+            multicast_listen_socket_(ioc_),
             json_storage_(std::make_unique<decltype(json_storage_)::element_type>(JSON_Package_Max_Size, 0)),
             json_storage_resource_(std::make_unique<decltype(json_storage_resource_)::element_type>
                                            (json_storage_->data(), json_storage_->size())) {
 
             const auto &c = config_->config();
             multicast_address_.from_string(c.multicast_address);
+            multicast_listen_address_.from_string(c.multicast_listen_address);
             multicast_port_ = c.multicast_port;
-            listen_address_.from_string(c.listen_address);
 
-            sender_endpoint_ = decltype(sender_endpoint_){multicast_address_, multicast_port_};
+            sender_address_.from_string(c.sender_address);
+            sender_port_ = c.sender_port;
+            multicast_listen_endpoint_ = decltype(multicast_listen_endpoint_){multicast_address_, multicast_port_};
+            multicast_listen_socket_.open(multicast_listen_endpoint_.protocol());
+            multicast_listen_socket_.set_option(boost::asio::ip::udp::socket::reuse_address(true));
+            multicast_listen_socket_.bind(
+                    decltype(multicast_listen_endpoint_){multicast_listen_address_, multicast_port_});
+
+            target_multicast_endpoint_ = decltype(target_multicast_endpoint_){multicast_address_, multicast_port_};
+
+            sender_endpoint_ = decltype(sender_endpoint_){sender_address_, sender_port_};
             sender_socket_.open(sender_endpoint_.protocol());
-            sender_socket_.set_option(boost::asio::ip::udp::socket::reuse_address(true));
+//            sender_socket_.set_option(boost::asio::ip::udp::socket::reuse_address(true));
+            sender_socket_.bind(sender_endpoint_);
 
-            listen_endpoint_ = decltype(listen_endpoint_){listen_address_, multicast_port_};
-            listen_socket_.open(listen_endpoint_.protocol());
-            listen_socket_.set_option(boost::asio::ip::udp::socket::reuse_address(true));
-            listen_socket_.bind(listen_endpoint_);
 
             // Join the multicast group.
-            listen_socket_.set_option(boost::asio::ip::multicast::join_group(multicast_address_));
+            multicast_listen_socket_.set_option(boost::asio::ip::multicast::join_group(multicast_address_));
 
             json_parse_options_.allow_comments = true;
             json_parse_options_.allow_trailing_commas = true;
@@ -97,17 +104,23 @@ namespace OwlMultiCast {
         boost::asio::ip::address multicast_address_{boost::asio::ip::make_address("239.255.0.1")};
         boost::asio::ip::port_type multicast_port_ = 30003;
 
+
+        //
+        boost::asio::ip::udp::endpoint target_multicast_endpoint_{multicast_address_, multicast_port_};
+
         // send package
-        boost::asio::ip::udp::endpoint sender_endpoint_;
+        boost::asio::ip::address sender_address_{boost::asio::ip::make_address("0.0.0.0")};
+        boost::asio::ip::port_type sender_port_ = 0;
+        boost::asio::ip::udp::endpoint sender_endpoint_{sender_address_, sender_port_};
         boost::asio::ip::udp::socket sender_socket_;
+        std::array<char, UDP_Package_Max_Size> back_data_{};
 
         // listen package
-        boost::asio::ip::address listen_address_{boost::asio::ip::make_address("0.0.0.0")};
-        boost::asio::ip::udp::endpoint listen_endpoint_;
-        boost::asio::ip::udp::socket listen_socket_;
+        boost::asio::ip::udp::endpoint multicast_listen_endpoint_{multicast_address_, multicast_port_};
+        boost::asio::ip::address multicast_listen_address_{boost::asio::ip::make_address("0.0.0.0")};
+        boost::asio::ip::udp::socket multicast_listen_socket_;
 
         // where the package come
-        boost::asio::ip::udp::endpoint receiver_endpoint_;
         std::array<char, UDP_Package_Max_Size> receive_data_{};
 
         boost::json::parse_options json_parse_options_;
@@ -135,13 +148,18 @@ namespace OwlMultiCast {
 
         // ======================================================================================================
 
-        void do_receive_json(std::size_t length);
+        void do_receive_json(
+                std::size_t length,
+                std::array<char, UDP_Package_Max_Size> &data_,
+                boost::shared_ptr<boost::asio::ip::udp::endpoint> receiver_endpoint);
 
         void do_receive();
 
         // ======================================================================================================
 
         void do_send();
+
+        void do_send_back();
 
 
     };

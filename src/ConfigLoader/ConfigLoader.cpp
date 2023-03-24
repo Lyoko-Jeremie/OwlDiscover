@@ -129,8 +129,10 @@ namespace OwlConfigLoader {
         config.ImageServiceHttpPort = get(root, "ImageServiceHttpPort", config.ImageServiceHttpPort);
 
         config.multicast_address = get(root, "multicast_address", config.multicast_address);
+        config.multicast_listen_address = get(root, "multicast_listen_address", config.multicast_listen_address);
         config.multicast_port = get(root, "multicast_port", config.multicast_port);
-        config.listen_address = get(root, "listen_address", config.listen_address);
+        config.sender_address = get(root, "sender_address", config.sender_address);
+        config.sender_port = get(root, "sender_port", config.sender_port);
         config.multicast_interval_seconds = get(root, "multicast_interval_seconds", config.multicast_interval_seconds);
 
         config.font_path = get(root, "font_path", config.font_path);
@@ -148,8 +150,10 @@ namespace OwlConfigLoader {
             << "\n" << "ImageServiceTcpPort " << config.ImageServiceTcpPort
             << "\n" << "ImageServiceHttpPort " << config.ImageServiceHttpPort
             << "\n" << "multicast_address " << config.multicast_address
+            << "\n" << "multicast_listen_address " << config.multicast_listen_address
             << "\n" << "multicast_port " << config.multicast_port
-            << "\n" << "listen_address " << config.listen_address
+            << "\n" << "sender_address " << config.sender_address
+            << "\n" << "sender_port " << config.sender_port
             << "\n" << "multicast_interval_seconds " << config.multicast_interval_seconds
             << "\n" << "font_path " << config.font_path
             << "";

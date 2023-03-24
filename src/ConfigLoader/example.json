@@ -4,8 +4,10 @@
   "ImageServiceTcpPort": 23332,
   "ImageServiceHttpPort": 23331,
   "multicast_address": "239.255.0.1",
+  "multicast_listen_address": "0.0.0.0",
   "multicast_port": 30003,
-  "listen_address": "0.0.0.0",
+  "sender_address": "0.0.0.0",
+  "sender_port": 0,
   "multicast_interval_seconds": 15,
   "font_path": "../SourceHanSansCN/SourceHanSansCN-Normal.otf"
 }

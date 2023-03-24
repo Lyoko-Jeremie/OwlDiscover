@@ -27,8 +27,10 @@ namespace OwlConfigLoader {
         int ImageServiceHttpPort = 23331;
 
         std::string multicast_address = "239.255.0.1";
+        std::string multicast_listen_address = "0.0.0.0";
         int multicast_port = 30003;
-        std::string listen_address = "0.0.0.0";
+        std::string sender_address = "0.0.0.0";
+        int sender_port = 0;
         int multicast_interval_seconds = 15;
 
         std::string font_path = R"(../SourceHanSansCN/SourceHanSansCN-Normal.otf)";
