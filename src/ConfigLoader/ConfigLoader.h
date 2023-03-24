@@ -31,6 +31,7 @@ namespace OwlConfigLoader {
         std::string listen_address = "0.0.0.0";
         int multicast_interval_seconds = 15;
 
+        std::string font_path = R"(../SourceHanSansCN/SourceHanSansCN-Normal.otf)";
     };
 
 

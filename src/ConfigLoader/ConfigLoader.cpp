@@ -133,6 +133,8 @@ namespace OwlConfigLoader {
         config.listen_address = get(root, "listen_address", config.listen_address);
         config.multicast_interval_seconds = get(root, "multicast_interval_seconds", config.multicast_interval_seconds);
 
+        config.font_path = get(root, "font_path", config.font_path);
+
         return _config_;
     }
 
@@ -149,6 +151,7 @@ namespace OwlConfigLoader {
             << "\n" << "multicast_port " << config.multicast_port
             << "\n" << "listen_address " << config.listen_address
             << "\n" << "multicast_interval_seconds " << config.multicast_interval_seconds
+            << "\n" << "font_path " << config.font_path
             << "";
     }
 

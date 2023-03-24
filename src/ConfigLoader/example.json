@@ -3,42 +3,9 @@
   "CommandServiceHttpPort": 23338,
   "ImageServiceTcpPort": 23332,
   "ImageServiceHttpPort": 23331,
-  "EmbedWebServerHttpPort": 81,
-  "airplane_fly_serial_baud_rate": 115200,
-  "airplane_fly_serial_addr": "/dev/ttyS1",
-  "camera_addr_1": 0,
-  "camera_1_VideoCaptureAPI": "CAP_ANY",
-  "camera_1_w": 800,
-  "camera_1_h": 600,
-  "camera_addr_2": 1,
-  "camera_2_VideoCaptureAPI": "CAP_ANY",
-  "camera_2_w": 800,
-  "camera_2_h": 600,
-  "camera_read_max_ms": 600,
-  "camera_read_retry_ms": 100,
-  "camera_read_retry_times": 2,
-  "downCameraId": 2,
-  "frontCameraId": 1,
   "multicast_address": "239.255.0.1",
   "multicast_port": 30003,
   "listen_address": "0.0.0.0",
   "multicast_interval_seconds": 15,
-  "cmd_bash_path": "/bin/bash",
-  "js_map_calc_file": "../src/ConfigLoader/map_calc.js",
-  "js_map_calc_function_name": "calc_map_position",
-  "embedWebServer": {
-    "doc_root": "./html",
-    "index_file_of_root": "index.html",
-    "backend_json_string": "{}",
-    "allowFileExtList": "htm html js json jpg jpeg png bmp gif ico svg css"
-  },
-  "wifiCmd": {
-    "enable": "nmcli wifi on",
-    "ap": "nmcli dev wifi hotspot ssid \"<SSID>\" password \"<PWD>\" | cat",
-    "connect": "nmcli dev wifi connect \"<BSSID>\" password \"<PWD>\" | cat",
-    "scan": "nmcli dev wifi list | cat",
-    "showHotspotPassword": "nmcli dev wifi show-password | cat",
-    "getWlanDeviceState": "nmcli dev wifi list ifname \"<DEVICE_NAME>\" | cat",
-    "listWlanDevice": "nmcli dev status | grep \" wifi \""
-  }
+  "font_path": "../SourceHanSansCN/SourceHanSansCN-Normal.otf"
 }
