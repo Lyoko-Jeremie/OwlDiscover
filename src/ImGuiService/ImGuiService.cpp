@@ -551,10 +551,10 @@ namespace OwlImGuiService {
                         ImGui::SetNextWindowPos(main_viewport->WorkPos);
                         ImGui::SetNextWindowSize(main_viewport->WorkSize);
 
-                        if (ImGui::Begin("Hello, world!", &open, gui_window_flags)) {
+                        if (ImGui::Begin("MainWindow", &open, gui_window_flags)) {
                             if (ImGui::BeginMenuBar()) {
-                                if (ImGui::BeginMenu("Menu")) {
-                                    if (ImGui::MenuItem("Quit", "Alt+F4")) {
+                                if (ImGui::BeginMenu("菜单")) {
+                                    if (ImGui::MenuItem("退出", "Alt+F4")) {
                                         co_return true;
                                     }
                                     ImGui::EndMenu();
@@ -567,7 +567,7 @@ namespace OwlImGuiService {
 //                            ImGui::Text("有些有用的文字");
 
 
-                            if (ImGui::Button("Query")) {
+                            if (ImGui::Button("主动发现(Query)")) {
                                 BOOST_LOG_OWL(trace) << R"((ImGui::Button("Query")))";
                                 auto p = parentPtr_.lock();
                                 if (p) {
@@ -576,15 +576,15 @@ namespace OwlImGuiService {
                                 }
                             }
                             ImGui::SameLine();
-                            if (ImGui::Button("StopAll")) {
+                            if (ImGui::Button("全部停止(EmergencyStop)")) {
                                 do_all(OwlMailDefine::ControlCmd::stop);
                             }
                             ImGui::SameLine();
-                            if (ImGui::Button("LandAll")) {
+                            if (ImGui::Button("全部降落(Land)")) {
                                 do_all(OwlMailDefine::ControlCmd::land);
                             }
                             ImGui::SameLine();
-                            if (ImGui::Button("ClearAll")) {
+                            if (ImGui::Button("清空列表")) {
                                 cleanItem();
                             }
 
@@ -597,7 +597,7 @@ namespace OwlImGuiService {
 
                                 auto &accRc = items.get<DiscoverStateItemContainerRandomAccess>();
                                 if (accRc.empty()) {
-                                    ImGui::Text("Empty");
+                                    ImGui::Text("空列表");
                                 } else {
                                     if (ImGui::BeginTable("AddrTable", 9,
                                                           table_config.table_flags,
@@ -608,17 +608,17 @@ namespace OwlImGuiService {
                                                                      ImGuiTableColumnFlags_NoHide, 0.0f);
                                         ImGui::TableSetupColumn("IP", ImGuiTableColumnFlags_WidthFixed, 0.0f);
                                         ImGui::TableSetupColumn("PORT", ImGuiTableColumnFlags_WidthFixed, 0.0f);
-                                        ImGui::TableSetupColumn("Duration", ImGuiTableColumnFlags_NoSort |
+                                        ImGui::TableSetupColumn("上次上线间隔", ImGuiTableColumnFlags_NoSort |
                                                                             ImGuiTableColumnFlags_WidthFixed, 0.0f);
-                                        ImGui::TableSetupColumn("Land", ImGuiTableColumnFlags_NoSort |
+                                        ImGui::TableSetupColumn("降落", ImGuiTableColumnFlags_NoSort |
                                                                         ImGuiTableColumnFlags_WidthFixed, 0.0f);
-                                        ImGui::TableSetupColumn("Stop", ImGuiTableColumnFlags_NoSort |
+                                        ImGui::TableSetupColumn("停止", ImGuiTableColumnFlags_NoSort |
                                                                         ImGuiTableColumnFlags_WidthFixed, 0.0f);
-                                        ImGui::TableSetupColumn("Delete", ImGuiTableColumnFlags_NoSort |
+                                        ImGui::TableSetupColumn("删除", ImGuiTableColumnFlags_NoSort |
                                                                           ImGuiTableColumnFlags_WidthFixed, 0.0f);
-                                        ImGui::TableSetupColumn("FirstTime", ImGuiTableColumnFlags_NoSort |
+                                        ImGui::TableSetupColumn("第一次发现时间", ImGuiTableColumnFlags_NoSort |
                                                                              ImGuiTableColumnFlags_WidthFixed, 0.0f);
-                                        ImGui::TableSetupColumn("LastTime", ImGuiTableColumnFlags_NoSort |
+                                        ImGui::TableSetupColumn("上次上线时间", ImGuiTableColumnFlags_NoSort |
                                                                             ImGuiTableColumnFlags_WidthFixed, 0.0f);
                                         ImGui::TableSetupScrollFreeze(table_config.freeze_cols,
                                                                       table_config.freeze_rows);
@@ -661,7 +661,7 @@ namespace OwlImGuiService {
                                 ImGui::EndChild();
                             }
 
-                            ImGui::Text(u8"应用程序平均帧率 %.3f ms/frame (%.1f FPS)"_C, 1000.0f / io.Framerate,
+                            ImGui::Text(u8" %.3f ms/frame (%.1f FPS)"_C, 1000.0f / io.Framerate,
                                         io.Framerate);
 
                             ImGui::End();
