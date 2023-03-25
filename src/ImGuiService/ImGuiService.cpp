@@ -253,13 +253,29 @@ namespace OwlImGuiService {
         void do_all(OwlMailDefine::ControlCmd cmd) {
             auto p = parentPtr_.lock();
             if (p) {
-                auto &accIp = items.get<OwlDiscoverState::DiscoverStateItem::IP>();
-                auto accIpEnd = accIp.end();
-                for (auto it = accIp.begin(); it != accIpEnd; ++it) {
-                    auto m = boost::make_shared<OwlMailDefine::ControlCmdData>();
-                    m->cmd = cmd;
-                    m->ip = it->ip;
-                    p->sendCmdUdp(std::move(m));
+                if (cmdType == static_cast<int>(CmdType::Udp)) {
+                    auto &accIp = items.get<OwlDiscoverState::DiscoverStateItem::IP>();
+                    auto accIpEnd = accIp.end();
+                    for (auto it = accIp.begin(); it != accIpEnd; ++it) {
+                        auto m = boost::make_shared<OwlMailDefine::ControlCmdData>();
+                        m->cmd = cmd;
+                        m->ip = it->ip;
+                        p->sendCmdUdp(std::move(m));
+                    }
+                    return;
+                } else if (cmdType == static_cast<int>(CmdType::Http)) {
+                    auto &accIp = items.get<OwlDiscoverState::DiscoverStateItem::IP>();
+                    auto accIpEnd = accIp.end();
+                    for (auto it = accIp.begin(); it != accIpEnd; ++it) {
+                        auto m = boost::make_shared<OwlMailDefine::ControlCmdData>();
+                        m->cmd = cmd;
+                        m->ip = it->ip;
+                        p->sendCmdHttp(std::move(m));
+                    }
+                    return;
+                } else {
+                    BOOST_LOG_OWL(error) << "ImGuiServiceImpl do_all never go there.";
+                    return;
                 }
             }
         }
@@ -267,10 +283,22 @@ namespace OwlImGuiService {
         void do_ip(OwlMailDefine::ControlCmd cmd, std::string ip) {
             auto p = parentPtr_.lock();
             if (p) {
-                auto m = boost::make_shared<OwlMailDefine::ControlCmdData>();
-                m->cmd = cmd;
-                m->ip = std::move(ip);
-                p->sendCmdUdp(std::move(m));
+                if (cmdType == static_cast<int>(CmdType::Udp)) {
+                    auto m = boost::make_shared<OwlMailDefine::ControlCmdData>();
+                    m->cmd = cmd;
+                    m->ip = std::move(ip);
+                    p->sendCmdUdp(std::move(m));
+                    return;
+                } else if (cmdType == static_cast<int>(CmdType::Http)) {
+                    auto m = boost::make_shared<OwlMailDefine::ControlCmdData>();
+                    m->cmd = cmd;
+                    m->ip = std::move(ip);
+                    p->sendCmdHttp(std::move(m));
+                    return;
+                } else {
+                    BOOST_LOG_OWL(error) << "ImGuiServiceImpl do_ip never go there.";
+                    return;
+                }
             }
         }
 
@@ -481,6 +509,12 @@ namespace OwlImGuiService {
 
     private:
 
+        enum class CmdType {
+            Udp,
+            Http
+        };
+
+        int cmdType = static_cast<int>(CmdType::Udp);
 
         bool show_demo_window = false;
         bool show_about_window = false;
@@ -614,6 +648,12 @@ namespace OwlImGuiService {
                             if (ImGui::Button("清空列表")) {
                                 cleanItem();
                             }
+                            ImGui::SameLine();
+                            ImGui::Text("指令模式：");
+                            ImGui::SameLine();
+                            ImGui::RadioButton("UDP", &cmdType, static_cast<int>(CmdType::Udp));
+                            ImGui::SameLine();
+                            ImGui::RadioButton("HTTP", &cmdType, static_cast<int>(CmdType::Http));
 
                             const float footer_height_to_reserve =
                                     ImGui::GetStyle().ItemSpacing.y + ImGui::GetFrameHeightWithSpacing();
@@ -809,11 +849,11 @@ namespace OwlImGuiService {
         });
     }
 
-    void ImGuiService::sendCmdUdp(const boost::shared_ptr<OwlMailDefine::ControlCmdData>& data) {
+    void ImGuiService::sendCmdUdp(boost::shared_ptr<OwlMailDefine::ControlCmdData> data) {
         auto m = boost::make_shared<OwlMailDefine::MailControl2UdpControl::element_type>();
 
         BOOST_ASSERT(data);
-        m->controlCmdData = data;
+        m->controlCmdData = std::move(data);
 
         m->callbackRunner = [](OwlMailDefine::MailUdpControl2Control &&d) {
             // ignore
@@ -822,11 +862,11 @@ namespace OwlImGuiService {
         mailbox_udp_->sendA2B(std::move(m));
     }
 
-    void ImGuiService::sendCmdHttp(const boost::shared_ptr<OwlMailDefine::ControlCmdData>& data) {
-        auto m = boost::make_shared<OwlMailDefine::MailControl2HttpControl ::element_type>();
+    void ImGuiService::sendCmdHttp(boost::shared_ptr<OwlMailDefine::ControlCmdData> data) {
+        auto m = boost::make_shared<OwlMailDefine::MailControl2HttpControl::element_type>();
 
         BOOST_ASSERT(data);
-        m->controlCmdData = data;
+        m->controlCmdData = std::move(data);
 
         m->callbackRunner = [](OwlMailDefine::MailHttpControl2Control &&d) {
             // ignore
