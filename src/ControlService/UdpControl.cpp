@@ -42,6 +42,23 @@ namespace OwlControlService {
                                        << " " << boost::json::serialize(json_v);
 
         auto &o = json_v.as_object();
+        if (o.contains("MultiCast")) {
+            auto multiCastResponse = get(o, "MultiCast", std::string{});
+            if (multiCastResponse == "Response") {
+
+                auto m = boost::make_shared<OwlMailDefine::MailUdpControl2Control::element_type>();
+
+                auto controlCmdData = boost::make_shared<OwlDiscoverState::DiscoverStateItem>(
+                        receiver_endpoint->address().to_string(),
+                        static_cast<int>(receiver_endpoint->port())
+                );
+
+                m->discoverStateItem = std::move(controlCmdData);
+
+                send_back_result(std::move(m));
+                return;
+            }
+        }
         if (o.contains("cmdId") &&
             o.contains("packageId") &&
             o.contains("msg") &&

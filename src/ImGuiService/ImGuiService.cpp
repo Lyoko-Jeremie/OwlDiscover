@@ -318,7 +318,8 @@ namespace OwlImGuiService {
         void do_all(OwlMailDefine::ControlCmd cmd) {
             auto p = parentPtr_.lock();
             if (p) {
-                if (cmdType == static_cast<int>(CmdType::Udp)) {
+                if (cmdType == static_cast<int>(CmdType::Udp)
+                    || cmd == OwlMailDefine::ControlCmd::query) {
                     auto &accIp = items.get<OwlDiscoverState::DiscoverStateItem::IP>();
                     auto accIpEnd = accIp.end();
                     for (auto it = accIp.begin(); it != accIpEnd; ++it) {
@@ -348,7 +349,8 @@ namespace OwlImGuiService {
         void do_ip(OwlMailDefine::ControlCmd cmd, std::string ip) {
             auto p = parentPtr_.lock();
             if (p) {
-                if (cmdType == static_cast<int>(CmdType::Udp)) {
+                if (cmdType == static_cast<int>(CmdType::Udp)
+                    || cmd == OwlMailDefine::ControlCmd::query) {
                     auto m = boost::make_shared<OwlMailDefine::ControlCmdData>();
                     m->cmd = cmd;
                     m->ip = std::move(ip);
@@ -689,7 +691,7 @@ namespace OwlImGuiService {
                             }
 
 
-                            if (ImGui::Button("主动发现(Query)")) {
+                            if (ImGui::Button("主动发现(Multicast Query)")) {
                                 BOOST_LOG_OWL(trace) << R"((ImGui::Button("Query")))";
                                 auto p = parentPtr_.lock();
                                 if (p) {
@@ -698,7 +700,7 @@ namespace OwlImGuiService {
                                 }
                             }
                             ImGui::SameLine();
-                            if (ImGui::Button("全部查询(QueryAll)")) {
+                            if (ImGui::Button("全部查询(Unicast Query)")) {
                                 do_all(OwlMailDefine::ControlCmd::query);
                             }
                             ImGui::SameLine();
@@ -735,7 +737,8 @@ namespace OwlImGuiService {
                                 if (accRc.empty()) {
                                     ImGui::Text("空列表");
                                 } else {
-                                    if (ImGui::BeginTable("AddrTable", 12,
+                                    int col = 12;
+                                    if (ImGui::BeginTable("AddrTable", col,
                                                           table_config.table_flags,
                                                           ImVec2(0, 0))) {
 
@@ -755,7 +758,8 @@ namespace OwlImGuiService {
                                         ImGui::TableSetupColumn("校准", ImGuiTableColumnFlags_NoSort |
                                                                         ImGuiTableColumnFlags_WidthFixed, 0.0f);
                                         ImGui::TableSetupColumn("联通性测试", ImGuiTableColumnFlags_NoSort |
-                                                                              ImGuiTableColumnFlags_WidthFixed, 0.0f);
+                                                                              ImGuiTableColumnFlags_WidthFixed,
+                                                                0.0f);
                                         ImGui::TableSetupColumn("查询", ImGuiTableColumnFlags_NoSort |
                                                                         ImGuiTableColumnFlags_WidthFixed, 0.0f);
                                         ImGui::TableSetupColumn("第一次发现时间", ImGuiTableColumnFlags_NoSort |

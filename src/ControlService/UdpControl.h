@@ -27,9 +27,16 @@ namespace OwlControlService {
         ) : ioc_(ioc),
             config_(std::move(config)),
             mailbox_(std::move(mailbox)),
-            udp_socket_(ioc_) {
+            udp_socket_(ioc_, boost::asio::ip::udp::endpoint{
+                    boost::asio::ip::make_address("0.0.0.0"),
+                    0
+            }) {
 
-            udp_socket_.open(boost::asio::ip::udp::v4());
+//            udp_socket_.open(boost::asio::ip::udp::v4());
+//            udp_socket_.bind(boost::asio::ip::udp::endpoint{
+//                    boost::asio::ip::make_address("0.0.0.0"),
+//                    0
+//            });
 
             json_parse_options_.allow_comments = true;
             json_parse_options_.allow_trailing_commas = true;
@@ -84,6 +91,8 @@ namespace OwlControlService {
                                 do_receive();
                                 return;
                             }
+                            auto data = std::string_view{receive_data_.data(), receive_data_.data() + length};
+                            BOOST_LOG_OWL(error) << "UdpControl do_receive() some : " << data;
                             do_receive_json(length, receive_data_, receiver_endpoint);
                             do_receive();
                             return;
@@ -152,6 +161,7 @@ namespace OwlControlService {
                             {"cmdId",     static_cast<int>(OwlCmd::OwlCmdEnum::calibrate)},
                             {"packageId", ++id_},
                     }));
+                    break;
                 case OwlMailDefine::ControlCmd::query:
                     S = boost::make_shared<std::string>(boost::json::serialize(boost::json::value{
                             {"MultiCast", "Query"},
