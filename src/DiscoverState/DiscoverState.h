@@ -56,11 +56,15 @@ namespace OwlDiscoverState {
             return calcDuration(now());
         }
 
+        [[nodiscard]] static std::string nowTimeString() {
+            return getTimeString(now());
+        }
+
         [[nodiscard]] static boost::posix_time::ptime now() {
             return boost::posix_time::microsec_clock::local_time();
         }
 
-        std::string getTimeString(boost::posix_time::ptime t) {
+        [[nodiscard]] static std::string getTimeString(boost::posix_time::ptime t) {
             auto s = boost::posix_time::to_iso_extended_string(t);
             if (s.size() > 10) {
                 s.at(10) = '_';

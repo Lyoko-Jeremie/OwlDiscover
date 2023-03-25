@@ -296,6 +296,7 @@ if (CMAKE_BUILD_TYPE STREQUAL "Release")
     # disable console window
     target_link_options(${ProjectMainName} PRIVATE -mwindows)
     add_compile_options(-Wall -Wextra -O3)
+    add_definitions(-DIMGUI_DISABLE_DEMO_WINDOWS -DIMGUI_DISABLE_DEBUG_TOOLS)
 endif ()
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")

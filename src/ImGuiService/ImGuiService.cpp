@@ -612,6 +612,16 @@ namespace OwlImGuiService {
 
         std::string CopyrightString;
 
+        void HelpMarker(const char *desc) {
+            ImGui::TextDisabled("(?)");
+            if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort) && ImGui::BeginTooltip()) {
+                ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+                ImGui::TextUnformatted(desc);
+                ImGui::PopTextWrapPos();
+                ImGui::EndTooltip();
+            }
+        }
+
         boost::asio::awaitable<bool> co_main_loop(boost::shared_ptr<ImGuiServiceImpl> self) {
             boost::ignore_unused(self);
 
@@ -699,25 +709,46 @@ namespace OwlImGuiService {
                                 }
                             }
                             ImGui::SameLine();
+                            HelpMarker(
+                                    "使用Multicast组播功能主动搜索未知设备，\n需要(6.1.11.23.03.23d.e2b087f8)以上固件支持。\n可能被限速或屏蔽，请勿频繁点击发送"
+                            );
+                            ImGui::SameLine();
                             if (ImGui::Button("广播发现(Broadcast Query)")) {
                                 auto p = parentPtr_.lock();
                                 if (p) {
                                     p->sendBroadcast();
                                 }
                             }
+//                            if (ImGui::IsItemHovered()) {
+//                                ImGui::SetTooltip(
+//                                        "使用Broadcast广播功能主动搜索，对固件版本无要求");
+//                            }
+                            ImGui::SameLine();
+                            HelpMarker(
+                                    "使用Broadcast广播功能主动搜索未知设备，对固件版本无要求。\n对网络影响较大，可能被限速或屏蔽，请勿频繁点击发送。"
+                            );
                             ImGui::SameLine();
                             if (ImGui::Button("全部查询(Unicast Query)")) {
                                 do_all(OwlMailDefine::ControlCmd::query);
                             }
+                            ImGui::SameLine();
+                            HelpMarker("查询并刷新已列出设备是否在线，对固件版本无要求");
                             ImGui::SameLine();
                             ImGui::Text("指令模式：");
                             ImGui::SameLine();
                             ImGui::RadioButton("UDP", &cmdType, static_cast<int>(CmdType::Udp));
                             ImGui::SameLine();
                             ImGui::RadioButton("HTTP", &cmdType, static_cast<int>(CmdType::Http));
+                            ImGui::SameLine();
+                            HelpMarker(
+                                    "选择控制指令所使用的模式。\nHTTP模式更可靠但更慢，网络不稳定时更加明显。\nUDP在不稳定的网络下可能控制失败，需要多次点击发送指令。"
+                            );
 //                            ImGui::SameLine();
                             if (ImGui::Button("全部停止(EmergencyStop)")) {
                                 do_all(OwlMailDefine::ControlCmd::stop);
+                            }
+                            if (ImGui::IsItemHovered()) {
+                                ImGui::SetTooltip("紧急停桨");
                             }
                             ImGui::SameLine();
                             if (ImGui::Button("全部降落(Land)")) {
@@ -726,6 +757,9 @@ namespace OwlImGuiService {
                             ImGui::SameLine();
                             if (ImGui::Button("全部测试(Ping)")) {
                                 do_all(OwlMailDefine::ControlCmd::ping);
+                            }
+                            if (ImGui::IsItemHovered()) {
+                                ImGui::SetTooltip("测试所有已列出设备是否在线，对固件版本无要求");
                             }
                             ImGui::SameLine();
                             if (ImGui::Button("清空列表")) {
@@ -748,7 +782,7 @@ namespace OwlImGuiService {
                                                           table_config.table_flags,
                                                           ImVec2(0, 0))) {
 
-                                        ImGui::TableSetupColumn("I", ImGuiTableColumnFlags_NoSort |
+                                        ImGui::TableSetupColumn("#", ImGuiTableColumnFlags_NoSort |
                                                                      ImGuiTableColumnFlags_WidthFixed |
                                                                      ImGuiTableColumnFlags_NoHide, 0.0f);
                                         ImGui::TableSetupColumn("IP", ImGuiTableColumnFlags_WidthFixed, 0.0f);
@@ -789,6 +823,9 @@ namespace OwlImGuiService {
                                             ImGui::Text(boost::lexical_cast<std::string>(n.port).c_str());
                                             ImGui::TableNextColumn();
                                             ImGui::Text(n.nowDuration().c_str());
+                                            if (ImGui::IsItemHovered()) {
+                                                ImGui::SetTooltip("最近一次在线时间是%s秒前", n.nowDuration().c_str());
+                                            }
                                             ImGui::TableNextColumn();
                                             if (ImGui::SmallButton(("Land##" + n.ip).c_str())) {
                                                 do_ip(OwlMailDefine::ControlCmd::land, n.ip);
@@ -797,10 +834,16 @@ namespace OwlImGuiService {
                                             if (ImGui::SmallButton(("Stop##" + n.ip).c_str())) {
                                                 do_ip(OwlMailDefine::ControlCmd::stop, n.ip);
                                             }
+                                            if (ImGui::IsItemHovered()) {
+                                                ImGui::SetTooltip("紧急停桨");
+                                            }
                                             ImGui::TableNextColumn();
                                             if (ImGui::SmallButton(("Delete##" + n.ip).c_str())) {
                                                 BOOST_LOG_OWL(trace) << R"((ImGui::Button("Delete")) )" << n.ip;
                                                 deleteItem(n.ip);
+                                            }
+                                            if (ImGui::IsItemHovered()) {
+                                                ImGui::SetTooltip("从列表中删除");
                                             }
                                             ImGui::TableNextColumn();
                                             if (ImGui::SmallButton(("Calibrate##" + n.ip).c_str())) {
@@ -809,6 +852,9 @@ namespace OwlImGuiService {
                                             ImGui::TableNextColumn();
                                             if (ImGui::SmallButton(("Ping##" + n.ip).c_str())) {
                                                 do_ip(OwlMailDefine::ControlCmd::ping, n.ip);
+                                            }
+                                            if (ImGui::IsItemHovered()) {
+                                                ImGui::SetTooltip("测试此设备是否在线");
                                             }
                                             ImGui::TableNextColumn();
                                             if (ImGui::SmallButton(("Query##" + n.ip).c_str())) {
@@ -828,6 +874,10 @@ namespace OwlImGuiService {
 
                             ImGui::Text(u8" %.3f ms/frame (%.1f FPS)"_C, 1000.0f / io.Framerate,
                                         io.Framerate);
+                            ImGui::SameLine();
+                            ImGui::Text("     ");
+                            ImGui::SameLine();
+                            ImGui::Text("当前时间：%s", OwlDiscoverState::DiscoverStateItem::nowTimeString().c_str());
 
                             ImGui::End();
                         }
