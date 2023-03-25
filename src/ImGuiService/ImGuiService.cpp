@@ -337,6 +337,8 @@ namespace OwlImGuiService {
     private:
         SDL_Window *window = nullptr;
 
+        std::string MainWindowTitle{std::string("OwlDiscover ") + ProgramVersion};
+
         int init() {
 
             // Setup SDL
@@ -354,8 +356,10 @@ namespace OwlImGuiService {
 
             // Setup window
             SDL_WindowFlags window_flags = (SDL_WindowFlags) (SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
-            window = SDL_CreateWindow("OwlDiscover", SDL_WINDOWPOS_CENTERED,
-                                      SDL_WINDOWPOS_CENTERED, 1280, 720, window_flags);
+            window = SDL_CreateWindow(MainWindowTitle.c_str(),
+                                      SDL_WINDOWPOS_CENTERED,
+                                      SDL_WINDOWPOS_CENTERED,
+                                      1280, 720, window_flags);
             SDL_SysWMinfo wmInfo;
             SDL_VERSION(&wmInfo.version);
             SDL_GetWindowWMInfo(window, &wmInfo);
@@ -687,6 +691,8 @@ namespace OwlImGuiService {
                     if (show_about_window) {
                         ImGui::Begin("关于", &show_about_window, ImGuiWindowFlags_AlwaysAutoResize);
                         ImGui::Text(CopyrightString.c_str());
+                        ImGui::Text("广州市鑫广飞信息科技有限公司 版权所有 2023");
+                        ImGui::Text("");
                         if (ImGui::Button("关闭"))
                             show_about_window = false;
                         ImGui::End();
