@@ -54,6 +54,8 @@ namespace OwlImGuiService {
 
         void sendQuery();
 
+        void sendBroadcast();
+
         void sendCmdUdp(boost::shared_ptr<OwlMailDefine::ControlCmdData> data);
 
         void sendCmdHttp(boost::shared_ptr<OwlMailDefine::ControlCmdData> data);

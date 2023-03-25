@@ -15,6 +15,7 @@ namespace OwlMailDefine {
         land,
         calibrate,
         query,
+        broadcast,
     };
 
     struct ControlCmdData : public boost::enable_shared_from_this<ControlCmdData> {
@@ -33,6 +34,8 @@ namespace OwlMailDefine {
     struct UdpControl2Control {
 
         boost::shared_ptr<OwlDiscoverState::DiscoverStateItem> discoverStateItem;
+
+        bool updateOnly = false;
 
 
         std::function<void(boost::shared_ptr<UdpControl2Control>)> runner;

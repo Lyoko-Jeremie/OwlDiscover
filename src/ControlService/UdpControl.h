@@ -30,6 +30,10 @@ namespace OwlControlService {
             udp_socket_(ioc_, boost::asio::ip::udp::endpoint{
                     boost::asio::ip::make_address("0.0.0.0"),
                     0
+            }),
+            udp_broadcast_socket_(ioc_, boost::asio::ip::udp::endpoint{
+                    boost::asio::ip::udp::v4(),
+                    0
             }) {
 
 //            udp_socket_.open(boost::asio::ip::udp::v4());
@@ -37,6 +41,14 @@ namespace OwlControlService {
 //                    boost::asio::ip::make_address("0.0.0.0"),
 //                    0
 //            });
+
+            udp_broadcast_socket_.set_option(boost::asio::ip::udp::socket::reuse_address(true));
+            udp_broadcast_socket_.set_option(boost::asio::socket_base::broadcast(true));
+
+            broadcast_endpoint_ = decltype(broadcast_endpoint_){
+                    boost::asio::ip::address_v4::broadcast(),
+                    boost::lexical_cast<boost::asio::ip::port_type>(config_->config().CommandServiceUdpPort),
+            };
 
             json_parse_options_.allow_comments = true;
             json_parse_options_.allow_trailing_commas = true;
@@ -58,9 +70,11 @@ namespace OwlControlService {
 
         boost::asio::ip::udp::socket udp_socket_;
 
+        boost::asio::ip::udp::socket udp_broadcast_socket_;
+        boost::asio::ip::udp::endpoint broadcast_endpoint_;
+
         boost::json::parse_options json_parse_options_;
 
-        std::array<char, UDP_Package_Max_Size> receive_data_{};
 
         std::atomic_int id_{1};
 
@@ -68,6 +82,7 @@ namespace OwlControlService {
 
         void start() {
             do_receive();
+            do_receive_broadcast();
         }
 
     private:
@@ -75,14 +90,16 @@ namespace OwlControlService {
         void do_receive_json(
                 std::size_t length,
                 std::array<char, UDP_Package_Max_Size> &data_,
-                const boost::shared_ptr<boost::asio::ip::udp::endpoint> &receiver_endpoint);
+                const boost::shared_ptr<boost::asio::ip::udp::endpoint> &receiver_endpoint,
+                bool updateOnly = false);
 
         void do_receive() {
             auto receiver_endpoint = boost::make_shared<boost::asio::ip::udp::endpoint>();
+            auto receive_data = boost::make_shared<std::array<char, UDP_Package_Max_Size>>();
             udp_socket_.async_receive_from(
-                    boost::asio::buffer(receive_data_), *receiver_endpoint,
+                    boost::asio::buffer(*receive_data), *receiver_endpoint,
                     [
-                            this, sef = shared_from_this(), receiver_endpoint
+                            this, sef = shared_from_this(), receiver_endpoint, receive_data
                     ](boost::system::error_code ec, std::size_t length) {
                         if (!ec) {
                             if (length > UDP_Package_Max_Size) {
@@ -91,9 +108,9 @@ namespace OwlControlService {
                                 do_receive();
                                 return;
                             }
-                            auto data = std::string_view{receive_data_.data(), receive_data_.data() + length};
+                            auto data = std::string_view{receive_data->data(), receive_data->data() + length};
                             BOOST_LOG_OWL(error) << "UdpControl do_receive() some : " << data;
-                            do_receive_json(length, receive_data_, receiver_endpoint);
+                            do_receive_json(length, *receive_data, receiver_endpoint, true);
                             do_receive();
                             return;
                         }
@@ -103,6 +120,38 @@ namespace OwlControlService {
                         }
                         if (ec) {
                             BOOST_LOG_OWL(error) << "UdpControl do_receive() ec " << ec;
+                            return;
+                        }
+                    });
+        }
+
+        void do_receive_broadcast() {
+            auto receiver_endpoint = boost::make_shared<boost::asio::ip::udp::endpoint>();
+            auto receive_data = boost::make_shared<std::array<char, UDP_Package_Max_Size>>();
+            udp_broadcast_socket_.async_receive_from(
+                    boost::asio::buffer(*receive_data), *receiver_endpoint,
+                    [
+                            this, sef = shared_from_this(), receiver_endpoint, receive_data
+                    ](boost::system::error_code ec, std::size_t length) {
+                        if (!ec) {
+                            if (length > UDP_Package_Max_Size) {
+                                // bad length, ignore it
+                                BOOST_LOG_OWL(error) << "UdpControl do_receive_broadcast() bad length : " << length;
+                                do_receive_broadcast();
+                                return;
+                            }
+                            auto data = std::string_view{receive_data->data(), receive_data->data() + length};
+                            BOOST_LOG_OWL(error) << "UdpControl do_receive_broadcast() some : " << data;
+                            do_receive_json(length, *receive_data, receiver_endpoint, false);
+                            do_receive_broadcast();
+                            return;
+                        }
+                        if (ec == boost::asio::error::operation_aborted) {
+                            BOOST_LOG_OWL(trace_multicast) << "UdpControl do_receive_broadcast() ec operation_aborted";
+                            return;
+                        }
+                        if (ec) {
+                            BOOST_LOG_OWL(error) << "UdpControl do_receive_broadcast() ec " << ec;
                             return;
                         }
                     });
@@ -123,6 +172,9 @@ namespace OwlControlService {
                         case OwlMailDefine::ControlCmd::query:
                             sendCmd(data->controlCmdData);
                             break;
+                        case OwlMailDefine::ControlCmd::broadcast:
+                            sendBroadcast(data->controlCmdData);
+                            break;
                         default:
                             break;
                     }
@@ -130,6 +182,32 @@ namespace OwlControlService {
 
                 mailbox_->sendB2A(std::move(m));
             });
+        }
+
+        void sendBroadcast(const boost::shared_ptr<OwlMailDefine::ControlCmdData> &data) {
+            BOOST_ASSERT(data);
+            BOOST_LOG_OWL(trace) << "UdpControl sendBroadcast data " << data->ip << " " << static_cast<int>(data->cmd);
+
+            boost::shared_ptr<std::string> S = boost::make_shared<std::string>(
+                    boost::json::serialize(boost::json::value{
+                            {"cmdId",     static_cast<int>(OwlCmd::OwlCmdEnum::ping)},
+                            {"packageId", ++id_},
+                    }));
+
+            udp_broadcast_socket_.async_send_to(
+                    boost::asio::buffer(*S), broadcast_endpoint_,
+                    [
+                            this, self = shared_from_this(), S
+                    ](boost::system::error_code ec, std::size_t /*length*/) {
+                        if (ec) {
+                            BOOST_LOG_OWL(error) << "UdpControl sendBroadcast udp_broadcast_socket_.async_send_to ec "
+                                                 << ec;
+                            return;
+                        }
+                        BOOST_LOG_OWL(trace) << "UdpControl sendBroadcast udp_broadcast_socket_.async_send_to ok";
+                    });
+
+
         }
 
         void sendCmd(const boost::shared_ptr<OwlMailDefine::ControlCmdData> &data) {

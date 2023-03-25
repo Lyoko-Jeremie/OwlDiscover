@@ -17,8 +17,10 @@ namespace OwlControlService {
         }
     }
 
-    void UdpControl::do_receive_json(std::size_t length, std::array<char, UDP_Package_Max_Size> &data_,
-                                     const boost::shared_ptr<boost::asio::ip::udp::endpoint> &receiver_endpoint) {
+    void UdpControl::do_receive_json(
+            std::size_t length, std::array<char, UDP_Package_Max_Size> &data_,
+            const boost::shared_ptr<boost::asio::ip::udp::endpoint> &receiver_endpoint,
+            bool updateOnly) {
         auto data = std::string_view{data_.data(), data_.data() + length};
         BOOST_LOG_OWL(trace_multicast) << "UdpControl do_receive_json() data"
                                        << " receiver_endpoint_ "
@@ -75,6 +77,7 @@ namespace OwlControlService {
                 );
 
                 m->discoverStateItem = std::move(controlCmdData);
+                m->updateOnly = updateOnly;
 
                 send_back_result(std::move(m));
                 return;

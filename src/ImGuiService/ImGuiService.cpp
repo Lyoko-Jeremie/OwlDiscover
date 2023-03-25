@@ -692,7 +692,6 @@ namespace OwlImGuiService {
 
 
                             if (ImGui::Button("主动发现(Multicast Query)")) {
-                                BOOST_LOG_OWL(trace) << R"((ImGui::Button("Query")))";
                                 auto p = parentPtr_.lock();
                                 if (p) {
                                     BOOST_LOG_OWL(trace) << R"(p->sendQuery())";
@@ -700,10 +699,23 @@ namespace OwlImGuiService {
                                 }
                             }
                             ImGui::SameLine();
+                            if (ImGui::Button("广播发现(Broadcast Query)")) {
+                                auto p = parentPtr_.lock();
+                                if (p) {
+                                    p->sendBroadcast();
+                                }
+                            }
+                            ImGui::SameLine();
                             if (ImGui::Button("全部查询(Unicast Query)")) {
                                 do_all(OwlMailDefine::ControlCmd::query);
                             }
                             ImGui::SameLine();
+                            ImGui::Text("指令模式：");
+                            ImGui::SameLine();
+                            ImGui::RadioButton("UDP", &cmdType, static_cast<int>(CmdType::Udp));
+                            ImGui::SameLine();
+                            ImGui::RadioButton("HTTP", &cmdType, static_cast<int>(CmdType::Http));
+//                            ImGui::SameLine();
                             if (ImGui::Button("全部停止(EmergencyStop)")) {
                                 do_all(OwlMailDefine::ControlCmd::stop);
                             }
@@ -712,19 +724,13 @@ namespace OwlImGuiService {
                                 do_all(OwlMailDefine::ControlCmd::land);
                             }
                             ImGui::SameLine();
-                            if (ImGui::Button("清空列表")) {
-                                cleanItem();
-                            }
-                            ImGui::SameLine();
                             if (ImGui::Button("全部测试(Ping)")) {
                                 do_all(OwlMailDefine::ControlCmd::ping);
                             }
                             ImGui::SameLine();
-                            ImGui::Text("指令模式：");
-                            ImGui::SameLine();
-                            ImGui::RadioButton("UDP", &cmdType, static_cast<int>(CmdType::Udp));
-                            ImGui::SameLine();
-                            ImGui::RadioButton("HTTP", &cmdType, static_cast<int>(CmdType::Http));
+                            if (ImGui::Button("清空列表")) {
+                                cleanItem();
+                            }
 
                             const float footer_height_to_reserve =
                                     ImGui::GetStyle().ItemSpacing.y + ImGui::GetFrameHeightWithSpacing();
@@ -915,8 +921,13 @@ namespace OwlImGuiService {
             if (data->runner) {
                 data->runner(data);
             } else if (data->discoverStateItem) {
-                auto &item = data->discoverStateItem;
-                impl->update_state(item);
+                if (data->updateOnly) {
+                    auto &item = data->discoverStateItem;
+                    impl->update_state(item);
+                } else {
+                    auto &item = data->discoverStateItem;
+                    impl->new_state(item);
+                }
             }
         });
 
@@ -934,6 +945,21 @@ namespace OwlImGuiService {
 
     void ImGuiService::clear() {
         impl->clear();
+    }
+
+    void ImGuiService::sendBroadcast() {
+        boost::asio::post(ioc_, [this, self = shared_from_this()]() {
+            auto m = boost::make_shared<OwlMailDefine::MailControl2UdpControl::element_type>();
+
+            m->controlCmdData = boost::make_shared<OwlMailDefine::ControlCmdData>();
+            m->controlCmdData->cmd = OwlMailDefine::ControlCmd::broadcast;
+            m->callbackRunner = [](OwlMailDefine::MailUdpControl2Control &&data) {
+                // ignore
+                boost::ignore_unused(data);
+            };
+
+            mailbox_udp_->sendA2B(std::move(m));
+        });
     }
 
     void ImGuiService::sendQuery() {
