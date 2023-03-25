@@ -2,6 +2,10 @@
 
 #include "ImGuiService.h"
 #include "../OwlLog/OwlLog.h"
+
+#include "../VERSION/ProgramVersion.h"
+#include "../VERSION/CodeVersion.h"
+
 #include <sstream>
 #include <boost/lexical_cast.hpp>
 #include <boost/asio/co_spawn.hpp>

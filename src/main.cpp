@@ -5,8 +5,13 @@
 
 #include <SDL_main.h>
 
-#include "./OwlLog/OwlLog.h"
+
 #include "./MemoryBoost.h"
+#include "./OwlLog/OwlLog.h"
+
+#include "./VERSION/ProgramVersion.h"
+#include "./VERSION/CodeVersion.h"
+
 #include <vector>
 #include <utility>
 #include <functional>

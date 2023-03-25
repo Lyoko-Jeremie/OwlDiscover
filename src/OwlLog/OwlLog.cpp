@@ -11,6 +11,10 @@
 #include <boost/log/attributes.hpp>
 #include <boost/log/utility/setup/formatter_parser.hpp>
 
+#include "../VERSION/ProgramVersion.h"
+#include "../VERSION/CodeVersion.h"
+
+
 #include <imgui.h>
 
 namespace OwlLog {
