@@ -212,6 +212,37 @@ namespace OwlImGuiService {
 
         }
 
+        void update_state(const boost::shared_ptr<OwlDiscoverState::DiscoverStateItem> &a) {
+            BOOST_ASSERT(a);
+            BOOST_ASSERT(!weak_from_this().expired());
+
+            boost::asio::dispatch(ioc_, [this, a, self = shared_from_this()]() {
+                BOOST_ASSERT(a);
+                BOOST_ASSERT(self);
+
+                auto &accIp = items.get<OwlDiscoverState::DiscoverStateItem::IP>();
+                auto accIpEnd = accIp.end();
+                BOOST_LOG_OWL(trace) << "ImGuiServiceImpl::new_state DiscoverStateItem a " << a->ip;
+
+                auto it = accIp.find(a->ip);
+                if (it != accIpEnd) {
+                    // update
+                    accIp.modify(it, [&a](OwlDiscoverState::DiscoverStateItem &n) {
+                        n.lastTime = a->lastTime;
+                        n.port = a->port;
+                        n.updateCache();
+                    });
+                } else {
+                    // insert
+                    // ignore
+                }
+
+                // re short it
+                sortItem();
+
+            });
+        }
+
         void new_state(const boost::shared_ptr<OwlDiscoverState::DiscoverStateItem> &a) {
             BOOST_ASSERT(a);
             BOOST_ASSERT(!weak_from_this().expired());
@@ -657,10 +688,6 @@ namespace OwlImGuiService {
                                 ImGui::EndMenuBar();
                             }
 
-//                            ImGui::Text("有些有用的文字");
-//                            ImGui::SameLine();
-//                            ImGui::Text("有些有用的文字");
-
 
                             if (ImGui::Button("主动发现(Query)")) {
                                 BOOST_LOG_OWL(trace) << R"((ImGui::Button("Query")))";
@@ -669,6 +696,10 @@ namespace OwlImGuiService {
                                     BOOST_LOG_OWL(trace) << R"(p->sendQuery())";
                                     p->sendQuery();
                                 }
+                            }
+                            ImGui::SameLine();
+                            if (ImGui::Button("全部查询(QueryAll)")) {
+                                do_all(OwlMailDefine::ControlCmd::query);
                             }
                             ImGui::SameLine();
                             if (ImGui::Button("全部停止(EmergencyStop)")) {
@@ -704,7 +735,7 @@ namespace OwlImGuiService {
                                 if (accRc.empty()) {
                                     ImGui::Text("空列表");
                                 } else {
-                                    if (ImGui::BeginTable("AddrTable", 11,
+                                    if (ImGui::BeginTable("AddrTable", 12,
                                                           table_config.table_flags,
                                                           ImVec2(0, 0))) {
 
@@ -725,6 +756,8 @@ namespace OwlImGuiService {
                                                                         ImGuiTableColumnFlags_WidthFixed, 0.0f);
                                         ImGui::TableSetupColumn("联通性测试", ImGuiTableColumnFlags_NoSort |
                                                                               ImGuiTableColumnFlags_WidthFixed, 0.0f);
+                                        ImGui::TableSetupColumn("查询", ImGuiTableColumnFlags_NoSort |
+                                                                        ImGuiTableColumnFlags_WidthFixed, 0.0f);
                                         ImGui::TableSetupColumn("第一次发现时间", ImGuiTableColumnFlags_NoSort |
                                                                                   ImGuiTableColumnFlags_WidthFixed,
                                                                 0.0f);
@@ -766,6 +799,10 @@ namespace OwlImGuiService {
                                             ImGui::TableNextColumn();
                                             if (ImGui::SmallButton(("Ping##" + n.ip).c_str())) {
                                                 do_ip(OwlMailDefine::ControlCmd::ping, n.ip);
+                                            }
+                                            ImGui::TableNextColumn();
+                                            if (ImGui::SmallButton(("Query##" + n.ip).c_str())) {
+                                                do_ip(OwlMailDefine::ControlCmd::query, n.ip);
                                             }
                                             ImGui::TableNextColumn();
                                             ImGui::Text(n.cacheFirstTime.c_str());
@@ -873,6 +910,9 @@ namespace OwlImGuiService {
         mailbox_udp_->receiveB2A([this](OwlMailDefine::MailUdpControl2Control &&data) {
             if (data->runner) {
                 data->runner(data);
+            } else if (data->discoverStateItem) {
+                auto &item = data->discoverStateItem;
+                impl->update_state(item);
             }
         });
 
@@ -909,17 +949,12 @@ namespace OwlImGuiService {
     void ImGuiService::sendCmdUdp(boost::shared_ptr<OwlMailDefine::ControlCmdData> data) {
         auto m = boost::make_shared<OwlMailDefine::MailControl2UdpControl::element_type>();
 
-        auto a = boost::make_shared<OwlDiscoverState::DiscoverStateItem>(
-                data->ip,
-                0
-        );
-
         BOOST_ASSERT(data);
         m->controlCmdData = std::move(data);
 
-        m->callbackRunner = [this, self = shared_from_this(), a](OwlMailDefine::MailUdpControl2Control &&d) {
+        m->callbackRunner = [](OwlMailDefine::MailUdpControl2Control &&d) {
             boost::ignore_unused(d);
-            impl->new_state(a);
+            // ignore
         };
 
         mailbox_udp_->sendA2B(std::move(m));

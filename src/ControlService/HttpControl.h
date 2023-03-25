@@ -60,6 +60,7 @@ namespace OwlControlService {
                         case OwlMailDefine::ControlCmd::land:
                         case OwlMailDefine::ControlCmd::stop:
                         case OwlMailDefine::ControlCmd::calibrate:
+                        case OwlMailDefine::ControlCmd::query:
                             sendCmd(data, data->controlCmdData);
                             break;
                         default:

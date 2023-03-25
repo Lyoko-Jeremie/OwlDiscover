@@ -147,6 +147,9 @@ namespace OwlControlService {
                         {"packageId", ++id_},
                 }));
                 break;
+            case OwlMailDefine::ControlCmd::query:
+                // ignore
+                return;
             default:
                 BOOST_LOG_OWL(error) << "UdpControl sendCmd switch (data->cmd)  default";
                 return;

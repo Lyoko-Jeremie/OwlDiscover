@@ -121,7 +121,6 @@ namespace OwlMultiCast {
         boost::asio::ip::address multicast_listen_address_{boost::asio::ip::make_address("0.0.0.0")};
         boost::asio::ip::udp::socket multicast_listen_socket_;
 
-        // where the package come
         std::array<char, UDP_Package_Max_Size> receive_data_{};
 
         boost::json::parse_options json_parse_options_;

@@ -5,6 +5,7 @@
 
 #include "../MemoryBoost.h"
 #include "../AsyncCallbackMailbox/AsyncCallbackMailbox.h"
+#include "../DiscoverState/DiscoverState.h"
 
 namespace OwlMailDefine {
 
@@ -13,6 +14,7 @@ namespace OwlMailDefine {
         stop,
         land,
         calibrate,
+        query,
     };
 
     struct ControlCmdData : public boost::enable_shared_from_this<ControlCmdData> {
@@ -29,6 +31,9 @@ namespace OwlMailDefine {
         std::function<void(boost::shared_ptr<UdpControl2Control>)> callbackRunner;
     };
     struct UdpControl2Control {
+
+        boost::shared_ptr<OwlDiscoverState::DiscoverStateItem> discoverStateItem;
+
 
         std::function<void(boost::shared_ptr<UdpControl2Control>)> runner;
     };
