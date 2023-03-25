@@ -289,7 +289,11 @@ add_executable(${ProjectMainName}
         src/DiscoverState/DiscoverState.h
         src/ControlService/UdpControl.cpp
         src/ControlService/UdpControl.h
-        src/ControlService/ControlServiceUdpMailBox.h)
+        src/ControlService/ControlServiceUdpMailBox.h
+        src/ControlService/HttpControl.cpp
+        src/ControlService/HttpControl.h
+        src/ControlService/ControlServiceHttpMailBox.h
+        src/ControlService/OwlCmd.h)
 
 # ============================================================================================
 
@@ -298,7 +302,6 @@ if (CMAKE_BUILD_TYPE STREQUAL "Release")
     # disable console window
     target_link_options(${ProjectMainName} PRIVATE -mwindows)
 endif ()
-
 
 
 target_link_libraries(${ProjectMainName} ${CMAKE_THREAD_LIBS_INIT})

@@ -10,46 +10,9 @@
 #include <atomic>
 #include "./ControlServiceUdpMailBox.h"
 #include "../ConfigLoader/ConfigLoader.h"
+#include "./OwlCmd.h"
 
 namespace OwlControlService {
-
-    // follow table come from OwlAccessTerminal
-    enum class OwlCmdEnum {
-        ping = 0,
-        emergencyStop = 120,
-        unlock = 92,
-
-        calibrate = 90,
-        breakCmd = 10,
-        takeoff = 11,
-        land = 12,
-        move = 13,
-        rotate = 14,
-        keep = 15,
-        gotoCmd = 16,
-
-        led = 17,
-        high = 18,
-        speed = 19,
-        flyMode = 20,
-
-        joyCon = 60,
-        joyConSimple = 61,
-        joyConGyro = 62,
-
-    };
-    enum class OwlCmdRotateEnum {
-        cw = 1,
-        ccw = 2,
-    };
-    enum class OwlCmdMoveEnum {
-        up = 1,
-        down = 2,
-        left = 3,
-        right = 4,
-        forward = 5,
-        back = 6,
-    };
 
     class UdpControl : public boost::enable_shared_from_this<UdpControl> {
     public:
@@ -121,25 +84,25 @@ namespace OwlControlService {
             switch (data->cmd) {
                 case OwlMailDefine::ControlCmd::ping:
                     S = boost::make_shared<std::string>(boost::json::serialize(boost::json::value{
-                            {"cmdId",     static_cast<int>(OwlCmdEnum::ping)},
+                            {"cmdId",     static_cast<int>(OwlCmd::OwlCmdEnum::ping)},
                             {"packageId", ++id_},
                     }));
                     break;
                 case OwlMailDefine::ControlCmd::land:
                     S = boost::make_shared<std::string>(boost::json::serialize(boost::json::value{
-                            {"cmdId",     static_cast<int>(OwlCmdEnum::land)},
+                            {"cmdId",     static_cast<int>(OwlCmd::OwlCmdEnum::land)},
                             {"packageId", ++id_},
                     }));
                     break;
                 case OwlMailDefine::ControlCmd::stop:
                     S = boost::make_shared<std::string>(boost::json::serialize(boost::json::value{
-                            {"cmdId",     static_cast<int>(OwlCmdEnum::emergencyStop)},
+                            {"cmdId",     static_cast<int>(OwlCmd::OwlCmdEnum::emergencyStop)},
                             {"packageId", ++id_},
                     }));
                     break;
                 case OwlMailDefine::ControlCmd::calibrate:
                     S = boost::make_shared<std::string>(boost::json::serialize(boost::json::value{
-                            {"cmdId",     static_cast<int>(OwlCmdEnum::calibrate)},
+                            {"cmdId",     static_cast<int>(OwlCmd::OwlCmdEnum::calibrate)},
                             {"packageId", ++id_},
                     }));
                     break;
