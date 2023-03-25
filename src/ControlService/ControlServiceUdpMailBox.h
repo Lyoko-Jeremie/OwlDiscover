@@ -9,8 +9,10 @@
 namespace OwlMailDefine {
 
     enum class ControlCmd {
+        ping,
         stop,
         land,
+        calibrate,
     };
 
     struct ControlCmdData : public boost::enable_shared_from_this<ControlCmdData> {

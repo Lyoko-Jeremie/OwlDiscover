@@ -401,22 +401,8 @@ namespace OwlImGuiService {
 //            io.Fonts->AddFontDefault(),
 //            io.Fonts->AddFontFromFileTTF(R"(c:\Windows\Fonts\segoeui.ttf)", 18.0f,
 //                                         &config, io.Fonts->GetGlyphRangesChineseFull()),
-//            io.Fonts->AddFontFromFileTTF(R"(../SourceHanSansCN/SourceHanSans.ttc)", 18.0f,
-//                                         &config, io.Fonts->GetGlyphRangesChineseFull()),
-//            io.Fonts->AddFontFromFileTTF(R"(../SourceHanSansCN/SourceHanSansCN-Bold.otf)", 18.0f,
-//                                         &config, io.Fonts->GetGlyphRangesChineseFull()),
-//            io.Fonts->AddFontFromFileTTF(R"(../SourceHanSansCN/SourceHanSansCN-ExtraLight.otf)", 18.0f,
-//                                         &config, io.Fonts->GetGlyphRangesChineseFull()),
-//            io.Fonts->AddFontFromFileTTF(R"(../SourceHanSansCN/SourceHanSansCN-Heavy.otf)", 18.0f,
-//                                         &config, io.Fonts->GetGlyphRangesChineseFull()),
-//            io.Fonts->AddFontFromFileTTF(R"(../SourceHanSansCN/SourceHanSansCN-Light.otf)", 18.0f,
-//                                         &config, io.Fonts->GetGlyphRangesChineseFull()),
-//            io.Fonts->AddFontFromFileTTF(R"(../SourceHanSansCN/SourceHanSansCN-Medium.otf)", 18.0f,
-//                                         &config, io.Fonts->GetGlyphRangesChineseFull()),
                     io.Fonts->AddFontFromFileTTF(ppp->config().font_path.c_str(), 21.0f,
                                                  &config, io.Fonts->GetGlyphRangesChineseFull()),
-//            io.Fonts->AddFontFromFileTTF(R"(../SourceHanSansCN/SourceHanSansCN-Regular.otf)", 18.0f,
-//                                         NULL, io.Fonts->GetGlyphRangesChineseFull()),
             };
             io.Fonts->Build();
             for (const auto &a: fontsList) {
@@ -624,7 +610,7 @@ namespace OwlImGuiService {
                                 if (accRc.empty()) {
                                     ImGui::Text("空列表");
                                 } else {
-                                    if (ImGui::BeginTable("AddrTable", 9,
+                                    if (ImGui::BeginTable("AddrTable", 10,
                                                           table_config.table_flags,
                                                           ImVec2(0, 0))) {
 
@@ -640,6 +626,8 @@ namespace OwlImGuiService {
                                         ImGui::TableSetupColumn("停止", ImGuiTableColumnFlags_NoSort |
                                                                         ImGuiTableColumnFlags_WidthFixed, 0.0f);
                                         ImGui::TableSetupColumn("删除", ImGuiTableColumnFlags_NoSort |
+                                                                        ImGuiTableColumnFlags_WidthFixed, 0.0f);
+                                        ImGui::TableSetupColumn("校准", ImGuiTableColumnFlags_NoSort |
                                                                         ImGuiTableColumnFlags_WidthFixed, 0.0f);
                                         ImGui::TableSetupColumn("第一次发现时间", ImGuiTableColumnFlags_NoSort |
                                                                                   ImGuiTableColumnFlags_WidthFixed,
@@ -674,6 +662,10 @@ namespace OwlImGuiService {
                                             if (ImGui::SmallButton(("Delete##" + n.ip).c_str())) {
                                                 BOOST_LOG_OWL(trace) << R"((ImGui::Button("Delete")) )" << n.ip;
                                                 deleteItem(n.ip);
+                                            }
+                                            ImGui::TableNextColumn();
+                                            if (ImGui::SmallButton(("Calibrate##" + n.ip).c_str())) {
+                                                do_ip(OwlMailDefine::ControlCmd::calibrate, n.ip);
                                             }
                                             ImGui::TableNextColumn();
                                             ImGui::Text(n.cacheFirstTime.c_str());

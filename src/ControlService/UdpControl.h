@@ -98,8 +98,10 @@ namespace OwlControlService {
 
                 if (data->controlCmdData) {
                     switch (data->controlCmdData->cmd) {
+                        case OwlMailDefine::ControlCmd::ping:
                         case OwlMailDefine::ControlCmd::land:
                         case OwlMailDefine::ControlCmd::stop:
+                        case OwlMailDefine::ControlCmd::calibrate:
                             sendCmd(data->controlCmdData);
                             break;
                         default:
@@ -117,6 +119,12 @@ namespace OwlControlService {
 
             boost::shared_ptr<std::string> S;
             switch (data->cmd) {
+                case OwlMailDefine::ControlCmd::ping:
+                    S = boost::make_shared<std::string>(boost::json::serialize(boost::json::value{
+                            {"cmdId",     static_cast<int>(OwlCmdEnum::ping)},
+                            {"packageId", ++id_},
+                    }));
+                    break;
                 case OwlMailDefine::ControlCmd::land:
                     S = boost::make_shared<std::string>(boost::json::serialize(boost::json::value{
                             {"cmdId",     static_cast<int>(OwlCmdEnum::land)},
@@ -126,6 +134,12 @@ namespace OwlControlService {
                 case OwlMailDefine::ControlCmd::stop:
                     S = boost::make_shared<std::string>(boost::json::serialize(boost::json::value{
                             {"cmdId",     static_cast<int>(OwlCmdEnum::emergencyStop)},
+                            {"packageId", ++id_},
+                    }));
+                    break;
+                case OwlMailDefine::ControlCmd::calibrate:
+                    S = boost::make_shared<std::string>(boost::json::serialize(boost::json::value{
+                            {"cmdId",     static_cast<int>(OwlCmdEnum::calibrate)},
                             {"packageId", ++id_},
                     }));
                     break;
