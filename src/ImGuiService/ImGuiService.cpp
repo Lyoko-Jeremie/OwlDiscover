@@ -201,15 +201,9 @@ namespace OwlImGuiService {
             BOOST_ASSERT(s);
             BOOST_ASSERT(!weak_from_this().expired());
 
-//            BOOST_LOG_OWL(trace) << "ImGuiServiceImpl::new_state before";
-
             boost::asio::dispatch(ioc_, [this, s, self = shared_from_this()]() {
                 BOOST_ASSERT(s);
                 BOOST_ASSERT(self);
-
-//                BOOST_LOG_OWL(trace) << "ImGuiServiceImpl::new_state update";
-
-//                return;
 
                 auto &accIp = items.get<OwlDiscoverState::DiscoverStateItem::IP>();
                 auto accIpEnd = accIp.end();
@@ -217,13 +211,8 @@ namespace OwlImGuiService {
                     BOOST_LOG_OWL(trace) << "ImGuiServiceImpl::new_state a " << a.ip;
 
                     auto it = accIp.find(a.ip);
-//                    BOOST_LOG_OWL(trace) << "ImGuiServiceImpl::new_state find ";
-//                    BOOST_LOG_OWL(trace) << "ImGuiServiceImpl::new_state find " << (it == accIp.end());
-//                    BOOST_LOG_OWL(trace) << "ImGuiServiceImpl::new_state find " << (it == accIpEnd);
                     if (it != accIpEnd) {
                         // update
-//                        BOOST_LOG_OWL(trace) << "ImGuiServiceImpl::new_state update ";
-//                        BOOST_LOG_OWL(trace) << "ImGuiServiceImpl::new_state update " << it->ip;
                         accIp.modify(it, [&a](OwlDiscoverState::DiscoverStateItem &n) {
                             n.lastTime = a.lastTime;
                             n.port = a.port;
@@ -231,19 +220,15 @@ namespace OwlImGuiService {
                         });
                     } else {
                         // insert
-//                        BOOST_LOG_OWL(trace) << "ImGuiServiceImpl::new_state insert ";
-//                        BOOST_LOG_OWL(trace) << "ImGuiServiceImpl::new_state insert " << a.ip;
                         auto b = a;
                         b.updateCache();
-//                        BOOST_LOG_OWL(trace) << "ImGuiServiceImpl::new_state add " << b.ip;
                         items.emplace_back(b);
                     }
                 }
 
-//                BOOST_LOG_OWL(trace) << "ImGuiServiceImpl::new_state sort";
                 // re short it
                 sortItem();
-//                BOOST_LOG_OWL(trace) << "ImGuiServiceImpl::new_state end";
+
             });
 
         }
@@ -251,8 +236,6 @@ namespace OwlImGuiService {
     private:
 
         void sortItem() {
-//            items.sort();
-//            return;
             auto now = OwlDiscoverState::DiscoverStateItem::now();
             auto &accIp = items.get<DiscoverStateItemContainerRandomAccess>();
             accIp.sort([&now](
@@ -440,8 +423,6 @@ namespace OwlImGuiService {
         struct TableConfig {
             ImGuiTableFlags table_flags =
                     ImGuiTableFlags_Reorderable
-                    //                    | ImGuiTableFlags_Sortable
-                    //                    | ImGuiTableFlags_SortMulti
                     | ImGuiTableFlags_RowBg
                     | ImGuiTableFlags_Borders
                     | ImGuiTableFlags_BordersH
@@ -456,10 +437,6 @@ namespace OwlImGuiService {
                     | ImGuiTableFlags_SizingFixedFit;
             int freeze_cols = 1;
             int freeze_rows = 1;
-            float row_min_height = 0.0f; // Auto
-            float inner_width_with_scroll = 0.0f; // Auto-extend
-            bool show_headers = true;
-            bool show_wrapped_text = false;
         };
         TableConfig table_config;
 
@@ -592,15 +569,6 @@ namespace OwlImGuiService {
                                         for (size_t i = 0; i < accRc.size(); ++i) {
                                             auto &n = accRc.at(i);
                                             ImGui::TableNextRow();
-//                                            ImGui::TableNextColumn();
-//                                            ImGui::Text((
-//                                                                boost::lexical_cast<std::string>(i) + "\t"
-//                                                                + n.ip + std::string{":"} +
-//                                                                boost::lexical_cast<std::string>(n.port) + "\t"
-//                                                                + n.cacheFirstTime + "\t"
-//                                                                + n.cacheLastTime + "\t"
-//                                                                + n.nowDuration() + "\t"
-//                                                        ).c_str());
                                             ImGui::TableNextColumn();
                                             ImGui::Text(boost::lexical_cast<std::string>(i).c_str());
                                             ImGui::TableNextColumn();
@@ -674,7 +642,6 @@ namespace OwlImGuiService {
             } catch (const std::exception &e) {
                 BOOST_LOG_OWL(error) << "co_process_tag_info catch (const std::exception &e)" << e.what();
                 throw;
-//                co_return false;
             }
 
             boost::ignore_unused(self);
@@ -702,10 +669,8 @@ namespace OwlImGuiService {
 
                 BOOST_ASSERT(impl);
                 if (data->state) {
-//                    BOOST_LOG_OWL(trace) << "ImGuiService::ImGuiService (data->state)";
                     impl->new_state(data->state);
                 } else {
-//                    BOOST_LOG_OWL(error) << "ImGuiService::ImGuiService receiveA2B (data->state)";
                 }
 
                 mailbox_ig_->sendB2A(std::move(m));
@@ -729,7 +694,6 @@ namespace OwlImGuiService {
     }
 
     void ImGuiService::sendQuery() {
-//        BOOST_LOG_OWL(trace) << "ImGuiService::sendQuery() before";
         boost::asio::post(ioc_, [this, self = shared_from_this()]() {
             auto m = boost::make_shared<OwlMailDefine::MailControl2Multicast::element_type>();
 
@@ -739,7 +703,6 @@ namespace OwlImGuiService {
                 boost::ignore_unused(data);
             };
 
-//            BOOST_LOG_OWL(trace) << "ImGuiService::sendQuery() send";
             mailbox_mc_->sendA2B(std::move(m));
         });
     }
