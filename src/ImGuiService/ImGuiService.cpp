@@ -341,6 +341,12 @@ namespace OwlImGuiService {
 
         int init() {
 
+            auto ppp = parentPtr_.lock();
+            if (!ppp) {
+                BOOST_LOG_OWL(error) << "ImGuiServiceImpl init() (!ppp)";
+                return -2;
+            }
+
             // Setup SDL
             // (Some versions of SDL before <2.0.10 appears to have performance/stalling issues on a minority of Windows systems,
             // depending on whether SDL_INIT_GAMECONTROLLER is enabled or disabled.. updating to the latest version of SDL is recommended!)
@@ -407,7 +413,7 @@ namespace OwlImGuiService {
 //                                         &config, io.Fonts->GetGlyphRangesChineseFull()),
 //            io.Fonts->AddFontFromFileTTF(R"(../SourceHanSansCN/SourceHanSansCN-Medium.otf)", 18.0f,
 //                                         &config, io.Fonts->GetGlyphRangesChineseFull()),
-                    io.Fonts->AddFontFromFileTTF(R"(../SourceHanSansCN/SourceHanSansCN-Normal.otf)", 21.0f,
+                    io.Fonts->AddFontFromFileTTF(ppp->config().font_path.c_str(), 21.0f,
                                                  &config, io.Fonts->GetGlyphRangesChineseFull()),
 //            io.Fonts->AddFontFromFileTTF(R"(../SourceHanSansCN/SourceHanSansCN-Regular.otf)", 18.0f,
 //                                         NULL, io.Fonts->GetGlyphRangesChineseFull()),
@@ -417,6 +423,7 @@ namespace OwlImGuiService {
                 if (!a) {
                     // cannot read fonts
                     clear();
+                    safe_exit();
                     return -2;
                 }
                 BOOST_LOG_OWL(info) << a->GetDebugName() << " " << a << " " << a->IsLoaded();

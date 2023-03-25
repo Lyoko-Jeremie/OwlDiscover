@@ -53,6 +53,10 @@ namespace OwlImGuiService {
 
         void sendCmdUdp(boost::shared_ptr<OwlMailDefine::ControlCmdData> data);
 
+        auto config() {
+            return config_->config();
+        }
+
     private:
 
     };
