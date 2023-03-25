@@ -572,10 +572,6 @@ namespace OwlImGuiService {
                                                                      ImGuiTableColumnFlags_NoHide, 0.0f);
                                         ImGui::TableSetupColumn("IP", ImGuiTableColumnFlags_WidthFixed, 0.0f);
                                         ImGui::TableSetupColumn("PORT", ImGuiTableColumnFlags_WidthFixed, 0.0f);
-                                        ImGui::TableSetupColumn("FirstTime", ImGuiTableColumnFlags_NoSort |
-                                                                             ImGuiTableColumnFlags_WidthFixed, 0.0f);
-                                        ImGui::TableSetupColumn("LastTime", ImGuiTableColumnFlags_NoSort |
-                                                                            ImGuiTableColumnFlags_WidthFixed, 0.0f);
                                         ImGui::TableSetupColumn("Duration", ImGuiTableColumnFlags_NoSort |
                                                                             ImGuiTableColumnFlags_WidthFixed, 0.0f);
                                         ImGui::TableSetupColumn("Land", ImGuiTableColumnFlags_NoSort |
@@ -584,6 +580,10 @@ namespace OwlImGuiService {
                                                                         ImGuiTableColumnFlags_WidthFixed, 0.0f);
                                         ImGui::TableSetupColumn("Delete", ImGuiTableColumnFlags_NoSort |
                                                                           ImGuiTableColumnFlags_WidthFixed, 0.0f);
+                                        ImGui::TableSetupColumn("FirstTime", ImGuiTableColumnFlags_NoSort |
+                                                                             ImGuiTableColumnFlags_WidthFixed, 0.0f);
+                                        ImGui::TableSetupColumn("LastTime", ImGuiTableColumnFlags_NoSort |
+                                                                            ImGuiTableColumnFlags_WidthFixed, 0.0f);
                                         ImGui::TableSetupScrollFreeze(table_config.freeze_cols,
                                                                       table_config.freeze_rows);
 
@@ -608,10 +608,6 @@ namespace OwlImGuiService {
                                             ImGui::TableNextColumn();
                                             ImGui::Text(boost::lexical_cast<std::string>(n.port).c_str());
                                             ImGui::TableNextColumn();
-                                            ImGui::Text(n.cacheFirstTime.c_str());
-                                            ImGui::TableNextColumn();
-                                            ImGui::Text(n.cacheLastTime.c_str());
-                                            ImGui::TableNextColumn();
                                             ImGui::Text(n.nowDuration().c_str());
                                             ImGui::TableNextColumn();
                                             if (ImGui::SmallButton(("Land##" + n.ip).c_str())) {}
@@ -622,6 +618,10 @@ namespace OwlImGuiService {
                                                 BOOST_LOG_OWL(trace) << R"((ImGui::Button("Delete")) )" << n.ip;
                                                 deleteItem(n.ip);
                                             }
+                                            ImGui::TableNextColumn();
+                                            ImGui::Text(n.cacheFirstTime.c_str());
+                                            ImGui::TableNextColumn();
+                                            ImGui::Text(n.cacheLastTime.c_str());
                                         }
                                         ImGui::EndTable();
                                     }
