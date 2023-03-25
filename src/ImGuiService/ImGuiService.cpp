@@ -683,6 +683,10 @@ namespace OwlImGuiService {
                                 cleanItem();
                             }
                             ImGui::SameLine();
+                            if (ImGui::Button("全部测试(Ping)")) {
+                                do_all(OwlMailDefine::ControlCmd::ping);
+                            }
+                            ImGui::SameLine();
                             ImGui::Text("指令模式：");
                             ImGui::SameLine();
                             ImGui::RadioButton("UDP", &cmdType, static_cast<int>(CmdType::Udp));
@@ -700,7 +704,7 @@ namespace OwlImGuiService {
                                 if (accRc.empty()) {
                                     ImGui::Text("空列表");
                                 } else {
-                                    if (ImGui::BeginTable("AddrTable", 10,
+                                    if (ImGui::BeginTable("AddrTable", 11,
                                                           table_config.table_flags,
                                                           ImVec2(0, 0))) {
 
@@ -719,6 +723,8 @@ namespace OwlImGuiService {
                                                                         ImGuiTableColumnFlags_WidthFixed, 0.0f);
                                         ImGui::TableSetupColumn("校准", ImGuiTableColumnFlags_NoSort |
                                                                         ImGuiTableColumnFlags_WidthFixed, 0.0f);
+                                        ImGui::TableSetupColumn("联通性测试", ImGuiTableColumnFlags_NoSort |
+                                                                              ImGuiTableColumnFlags_WidthFixed, 0.0f);
                                         ImGui::TableSetupColumn("第一次发现时间", ImGuiTableColumnFlags_NoSort |
                                                                                   ImGuiTableColumnFlags_WidthFixed,
                                                                 0.0f);
@@ -756,6 +762,10 @@ namespace OwlImGuiService {
                                             ImGui::TableNextColumn();
                                             if (ImGui::SmallButton(("Calibrate##" + n.ip).c_str())) {
                                                 do_ip(OwlMailDefine::ControlCmd::calibrate, n.ip);
+                                            }
+                                            ImGui::TableNextColumn();
+                                            if (ImGui::SmallButton(("Ping##" + n.ip).c_str())) {
+                                                do_ip(OwlMailDefine::ControlCmd::ping, n.ip);
                                             }
                                             ImGui::TableNextColumn();
                                             ImGui::Text(n.cacheFirstTime.c_str());
