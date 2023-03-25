@@ -294,6 +294,13 @@ add_executable(${ProjectMainName}
 # ============================================================================================
 
 
+if (CMAKE_BUILD_TYPE STREQUAL "Release")
+    # disable console window
+    target_link_options(${ProjectMainName} PRIVATE -mwindows)
+endif ()
+
+
+
 target_link_libraries(${ProjectMainName} ${CMAKE_THREAD_LIBS_INIT})
 
 include_directories(${CMAKE_SOURCE_DIR} ${Boost_INCLUDE_DIRS} ${FREETYPE_INCLUDE_DIRS} ${SDL2_INCLUDE_DIRS})
