@@ -756,7 +756,8 @@ namespace OwlImGuiService {
         config_(std::move(config)),
         mailbox_mc_(mailbox_mc),
         mailbox_ig_(mailbox_ig),
-        mailbox_udp_(mailbox_udp) {
+        mailbox_udp_(mailbox_udp),
+        mailbox_http_(mailbox_http) {
 
         mailbox_ig_->receiveA2B([this](OwlMailDefine::MailControl2ImGui &&data) {
             boost::asio::dispatch(ioc_, [this, data, self = shared_from_this()]() {
@@ -803,7 +804,7 @@ namespace OwlImGuiService {
         });
     }
 
-    void ImGuiService::sendCmdUdp(boost::shared_ptr<OwlMailDefine::ControlCmdData> data) {
+    void ImGuiService::sendCmdUdp(const boost::shared_ptr<OwlMailDefine::ControlCmdData>& data) {
         auto m = boost::make_shared<OwlMailDefine::MailControl2UdpControl::element_type>();
 
         BOOST_ASSERT(data);
@@ -814,6 +815,19 @@ namespace OwlImGuiService {
         };
 
         mailbox_udp_->sendA2B(std::move(m));
+    }
+
+    void ImGuiService::sendCmdHttp(const boost::shared_ptr<OwlMailDefine::ControlCmdData>& data) {
+        auto m = boost::make_shared<OwlMailDefine::MailControl2HttpControl ::element_type>();
+
+        BOOST_ASSERT(data);
+        m->controlCmdData = data;
+
+        m->callbackRunner = [](OwlMailDefine::MailHttpControl2Control &&d) {
+            // ignore
+        };
+
+        mailbox_http_->sendA2B(std::move(m));
     }
 
 } // OwlImGuiService
