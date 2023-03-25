@@ -385,8 +385,8 @@ namespace OwlImGuiService {
             io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
 
             // Setup Dear ImGui style
-            //    ImGui::StyleColorsDark();
-            ImGui::StyleColorsLight();
+            ImGui::StyleColorsDark();
+            // ImGui::StyleColorsLight();
 
             // Setup Platform/Renderer backends
             ImGui_ImplSDL2_InitForD3D(window);
@@ -567,6 +567,18 @@ namespace OwlImGuiService {
                                     ImGui::MenuItem("关于(About)", nullptr, &show_about_window);
                                     if (ImGui::MenuItem("退出", "Alt+F4")) {
                                         co_return true;
+                                    }
+                                    ImGui::EndMenu();
+                                }
+                                if (ImGui::BeginMenu("主题配色(Theme)")) {
+                                    if (ImGui::MenuItem("夜间配色(Dark)")) {
+                                        ImGui::StyleColorsDark();
+                                    }
+                                    if (ImGui::MenuItem("明亮配色(Light)")) {
+                                        ImGui::StyleColorsLight();
+                                    }
+                                    if (ImGui::MenuItem("经典配色(Classic)")) {
+                                        ImGui::StyleColorsClassic();
                                     }
                                     ImGui::EndMenu();
                                 }
