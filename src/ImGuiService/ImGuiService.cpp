@@ -909,12 +909,17 @@ namespace OwlImGuiService {
     void ImGuiService::sendCmdUdp(boost::shared_ptr<OwlMailDefine::ControlCmdData> data) {
         auto m = boost::make_shared<OwlMailDefine::MailControl2UdpControl::element_type>();
 
+        auto a = boost::make_shared<OwlDiscoverState::DiscoverStateItem>(
+                data->ip,
+                0
+        );
+
         BOOST_ASSERT(data);
         m->controlCmdData = std::move(data);
 
-        m->callbackRunner = [](OwlMailDefine::MailUdpControl2Control &&d) {
-            // ignore
+        m->callbackRunner = [this, self = shared_from_this(), a](OwlMailDefine::MailUdpControl2Control &&d) {
             boost::ignore_unused(d);
+            impl->new_state(a);
         };
 
         mailbox_udp_->sendA2B(std::move(m));
