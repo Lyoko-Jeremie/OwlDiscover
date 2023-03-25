@@ -12,6 +12,7 @@
 #include "../MultiCast/ControlMulticastMail.h"
 #include "../ConfigLoader/ConfigLoader.h"
 #include "./ControlImGuiMailBox.h"
+#include "../ControlService/ControlServiceUdpMailBox.h"
 
 namespace OwlImGuiService {
 
@@ -25,7 +26,8 @@ namespace OwlImGuiService {
                 boost::asio::io_context &ioc,
                 boost::shared_ptr<OwlConfigLoader::ConfigLoader> config,
                 OwlMailDefine::ControlImGuiMailBox &&mailbox_ig,
-                OwlMailDefine::ControlMulticastMailbox &&mailbox_mc
+                OwlMailDefine::ControlMulticastMailbox &&mailbox_mc,
+                OwlMailDefine::ControlUdpMailBox &&mailBox_udp
         );
 
         ~ImGuiService() {
@@ -38,6 +40,7 @@ namespace OwlImGuiService {
         boost::shared_ptr<OwlConfigLoader::ConfigLoader> config_;
         OwlMailDefine::ControlMulticastMailbox mailbox_mc_;
         OwlMailDefine::ControlImGuiMailBox mailbox_ig_;
+        OwlMailDefine::ControlUdpMailBox mailbox_udp_;
 
         boost::shared_ptr<ImGuiServiceImpl> impl;
 
@@ -47,6 +50,8 @@ namespace OwlImGuiService {
         void clear();
 
         void sendQuery();
+
+        void sendCmdUdp(boost::shared_ptr<OwlMailDefine::ControlCmdData> data);
 
     private:
 

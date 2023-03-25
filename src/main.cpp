@@ -20,6 +20,8 @@
 #include "./ConfigLoader/ConfigLoader.h"
 #include "./MultiCast/ControlMulticastMail.h"
 #include "./MultiCast/MultiCast.h"
+#include "./ControlService/ControlServiceUdpMailBox.h"
+#include "./ControlService/UdpControl.h"
 
 #ifndef DEFAULT_CONFIG
 #define DEFAULT_CONFIG R"(config.json)"
@@ -132,6 +134,7 @@ int main(int argc, char *argv[]) {
     config->init(config_file);
     config->print();
 
+    boost::asio::io_context ioc_udp_control;
     boost::asio::io_context ioc_multicast;
     boost::asio::io_context ioc_im_gui_service;
 
@@ -141,6 +144,9 @@ int main(int argc, char *argv[]) {
     auto mailbox_control_im_gui = boost::make_shared<OwlMailDefine::ControlImGuiMailBox::element_type>(
             ioc_multicast, ioc_im_gui_service, "mailbox_control_im_gui"
     );
+    auto mailbox_udp = boost::make_shared<OwlMailDefine::ControlUdpMailBox::element_type>(
+            ioc_im_gui_service, ioc_udp_control, "mailbox_udp"
+    );
     auto multiCastServer = boost::make_shared<OwlMultiCast::MultiCast>(
             ioc_multicast,
             config->shared_from_this(),
@@ -148,11 +154,18 @@ int main(int argc, char *argv[]) {
             mailbox_control_im_gui->shared_from_this()
     );
     multiCastServer->start();
+    auto udpControlService = boost::make_shared<OwlControlService::UdpControl>(
+            ioc_udp_control,
+            config->shared_from_this(),
+            mailbox_udp->shared_from_this()
+    );
+    udpControlService->start();
     auto imGuiService = boost::make_shared<OwlImGuiService::ImGuiService>(
             ioc_im_gui_service,
             config->shared_from_this(),
             mailbox_control_im_gui->shared_from_this(),
-            mailbox_control_multicast->shared_from_this()
+            mailbox_control_multicast->shared_from_this(),
+            mailbox_udp->shared_from_this()
     );
     imGuiService->start();
 
@@ -174,6 +187,7 @@ int main(int argc, char *argv[]) {
                 BOOST_LOG_OWL(info) << "stopping all service. ";
                 ioc_im_gui_service.stop();
                 ioc_multicast.stop();
+                ioc_udp_control.stop();
                 ioc_keyboard.stop();
             }
                 break;
@@ -187,6 +201,7 @@ int main(int argc, char *argv[]) {
         sig.clear();
         ioc_im_gui_service.stop();
         ioc_multicast.stop();
+        ioc_udp_control.stop();
         ioc_keyboard.stop();
     };
 
@@ -196,6 +211,7 @@ int main(int argc, char *argv[]) {
     boost::thread_group tg;
     tg.create_thread(ThreadCallee{ioc_im_gui_service, tg, "ioc_im_gui_service"});
     tg.create_thread(ThreadCallee{ioc_multicast, tg, "ioc_multicast"});
+    tg.create_thread(ThreadCallee{ioc_udp_control, tg, "ioc_udp_control"});
     tg.create_thread(ThreadCallee{ioc_keyboard, tg, "ioc_keyboard"});
 
     BOOST_LOG_OWL(info) << "boost::thread_group running";

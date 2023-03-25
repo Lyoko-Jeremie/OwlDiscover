@@ -235,7 +235,64 @@ namespace OwlImGuiService {
 
     private:
 
+        void do_all(OwlMailDefine::ControlCmd cmd) {
+            auto p = parentPtr_.lock();
+            if (p) {
+                auto &accIp = items.get<OwlDiscoverState::DiscoverStateItem::IP>();
+                auto accIpEnd = accIp.end();
+                for (auto it = accIp.begin(); it != accIpEnd; ++it) {
+                    auto m = boost::make_shared<OwlMailDefine::ControlCmdData>();
+                    m->cmd = cmd;
+                    m->ip = it->ip;
+                    p->sendCmdUdp(std::move(m));
+                }
+            }
+        }
+
+        void do_ip(OwlMailDefine::ControlCmd cmd, std::string ip) {
+            auto p = parentPtr_.lock();
+            if (p) {
+                auto m = boost::make_shared<OwlMailDefine::ControlCmdData>();
+                m->cmd = cmd;
+                m->ip = std::move(ip);
+                p->sendCmdUdp(std::move(m));
+            }
+        }
+
+
         void sortItem() {
+            sortItemByDuration30();
+        }
+
+        void sortItemByDuration30() {
+            auto now = OwlDiscoverState::DiscoverStateItem::now();
+            auto &accIp = items.get<DiscoverStateItemContainerRandomAccess>();
+            accIp.sort([&now](
+                    const OwlDiscoverState::DiscoverStateItem &a,
+                    const OwlDiscoverState::DiscoverStateItem &b
+            ) {
+                auto at = a.calcDurationSecond(now);
+                auto bt = b.calcDurationSecond(now);
+                if (at == bt) {
+                    return a.ip < b.ip;
+                }
+                if (at > 30 && bt > 30) {
+                    return a.ip < b.ip;
+                }
+                if (at <= 30 && bt <= 30) {
+                    return a.ip < b.ip;
+                }
+                if (at <= 30 && bt > 30) {
+                    return true;
+                }
+                if (at > 30 && bt <= 30) {
+                    return false;
+                }
+                return false;
+            });
+        }
+
+        void sortItemByDuration() {
             auto now = OwlDiscoverState::DiscoverStateItem::now();
             auto &accIp = items.get<DiscoverStateItemContainerRandomAccess>();
             accIp.sort([&now](
@@ -520,9 +577,11 @@ namespace OwlImGuiService {
                             }
                             ImGui::SameLine();
                             if (ImGui::Button("StopAll")) {
+                                do_all(OwlMailDefine::ControlCmd::stop);
                             }
                             ImGui::SameLine();
                             if (ImGui::Button("LandAll")) {
+                                do_all(OwlMailDefine::ControlCmd::land);
                             }
                             ImGui::SameLine();
                             if (ImGui::Button("ClearAll")) {
@@ -578,9 +637,13 @@ namespace OwlImGuiService {
                                             ImGui::TableNextColumn();
                                             ImGui::Text(n.nowDuration().c_str());
                                             ImGui::TableNextColumn();
-                                            if (ImGui::SmallButton(("Land##" + n.ip).c_str())) {}
+                                            if (ImGui::SmallButton(("Land##" + n.ip).c_str())) {
+                                                do_ip(OwlMailDefine::ControlCmd::land, n.ip);
+                                            }
                                             ImGui::TableNextColumn();
-                                            if (ImGui::SmallButton(("Stop##" + n.ip).c_str())) {}
+                                            if (ImGui::SmallButton(("Stop##" + n.ip).c_str())) {
+                                                do_ip(OwlMailDefine::ControlCmd::stop, n.ip);
+                                            }
                                             ImGui::TableNextColumn();
                                             if (ImGui::SmallButton(("Delete##" + n.ip).c_str())) {
                                                 BOOST_LOG_OWL(trace) << R"((ImGui::Button("Delete")) )" << n.ip;
@@ -656,11 +719,13 @@ namespace OwlImGuiService {
             boost::asio::io_context &ioc,
             boost::shared_ptr<OwlConfigLoader::ConfigLoader> config,
             OwlMailDefine::ControlImGuiMailBox &&mailbox_ig,
-            OwlMailDefine::ControlMulticastMailbox &&mailbox_mc
+            OwlMailDefine::ControlMulticastMailbox &&mailbox_mc,
+            OwlMailDefine::ControlUdpMailBox &&mailbox_udp
     ) : ioc_(ioc),
         config_(std::move(config)),
         mailbox_mc_(mailbox_mc),
-        mailbox_ig_(mailbox_ig) {
+        mailbox_ig_(mailbox_ig),
+        mailbox_udp_(mailbox_udp) {
 
         mailbox_ig_->receiveA2B([this](OwlMailDefine::MailControl2ImGui &&data) {
             boost::asio::dispatch(ioc_, [this, data, self = shared_from_this()]() {
@@ -705,6 +770,19 @@ namespace OwlImGuiService {
 
             mailbox_mc_->sendA2B(std::move(m));
         });
+    }
+
+    void ImGuiService::sendCmdUdp(boost::shared_ptr<OwlMailDefine::ControlCmdData> data) {
+        auto m = boost::make_shared<OwlMailDefine::MailControl2UdpControl::element_type>();
+
+        BOOST_ASSERT(data);
+        m->controlCmdData = data;
+
+        m->callbackRunner = [](OwlMailDefine::MailUdpControl2Control &&d) {
+            // ignore
+        };
+
+        mailbox_udp_->sendA2B(std::move(m));
     }
 
 } // OwlImGuiService
