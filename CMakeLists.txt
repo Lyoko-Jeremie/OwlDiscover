@@ -270,6 +270,7 @@ message(STATUS "CMAKE_SOURCE_DIR: ${CMAKE_SOURCE_DIR}")
 
 add_executable(${ProjectMainName}
         ${DearImGuiFile}
+        resource.rc
         src/main.cpp
         src/OwlLog/BoostAssertionFailed.cpp
         src/VERSION/ProgramVersion.h
