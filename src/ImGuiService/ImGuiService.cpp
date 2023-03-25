@@ -251,9 +251,11 @@ namespace OwlImGuiService {
     private:
 
         void sortItem() {
-//                items.sort();
+//            items.sort();
+//            return;
             auto now = OwlDiscoverState::DiscoverStateItem::now();
-            items.sort([&now](
+            auto &accIp = items.get<DiscoverStateItemContainerRandomAccess>();
+            accIp.sort([&now](
                     const OwlDiscoverState::DiscoverStateItem &a,
                     const OwlDiscoverState::DiscoverStateItem &b
             ) {
@@ -263,7 +265,7 @@ namespace OwlImGuiService {
                     return true;
                 }
                 if (at == bt) {
-                    return a < b;
+                    return a.ip < b.ip;
                 }
                 return false;
             });
