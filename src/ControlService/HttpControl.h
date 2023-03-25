@@ -44,6 +44,10 @@ namespace OwlControlService {
 
     public:
 
+        void start() {
+            // noop
+        }
+
     private:
 
         void receiveMailHttp(OwlMailDefine::MailControl2HttpControl &&data) {

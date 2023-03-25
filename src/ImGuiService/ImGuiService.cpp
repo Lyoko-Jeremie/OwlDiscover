@@ -751,7 +751,8 @@ namespace OwlImGuiService {
             boost::shared_ptr<OwlConfigLoader::ConfigLoader> config,
             OwlMailDefine::ControlImGuiMailBox &&mailbox_ig,
             OwlMailDefine::ControlMulticastMailbox &&mailbox_mc,
-            OwlMailDefine::ControlUdpMailBox &&mailbox_udp
+            OwlMailDefine::ControlUdpMailBox &&mailbox_udp,
+            OwlMailDefine::ControlHttpMailBox &&mailbox_http
     ) : ioc_(ioc),
         config_(std::move(config)),
         mailbox_mc_(mailbox_mc),
