@@ -11,6 +11,7 @@
 #include <boost/log/attributes.hpp>
 #include <boost/log/utility/setup/formatter_parser.hpp>
 
+#include <imgui.h>
 
 namespace OwlLog {
     thread_local std::string threadName;
@@ -175,8 +176,7 @@ namespace OwlLog {
             << "\n   CodeVersion_GIT_TAG " << CodeVersion_GIT_TAG
             << "\n   CodeVersion_GIT_BRANCH " << CodeVersion_GIT_BRANCH
             << "\n   Boost " << BOOST_LIB_VERSION
-//            << "\n   ProtoBuf " << GOOGLE_PROTOBUF_VERSION
-//            << "\n   OpenCV " << CV_VERSION
+            << "\n   Dear ImGui " << IMGUI_VERSION
             << "\n   BUILD_DATETIME " << CodeVersion_BUILD_DATETIME
             << "\n ---------- OwlDiscover  Copyright (C) 2023 ---------- ";
 

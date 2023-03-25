@@ -2,6 +2,7 @@
 
 #include "ImGuiService.h"
 #include "../OwlLog/OwlLog.h"
+#include <sstream>
 #include <boost/lexical_cast.hpp>
 #include <boost/asio/co_spawn.hpp>
 #include <boost/exception_ptr.hpp>
@@ -17,10 +18,8 @@
 #include <boost/multi_index/ordered_index.hpp>
 #include <boost/multi_index/random_access_index.hpp>
 #include <boost/multi_index/composite_key.hpp>
-#include <boost/multi_index/key.hpp>
 
 #include "../DiscoverState/DiscoverState.h"
-
 
 #include "imgui.h"
 #include "imgui_internal.h"
@@ -79,6 +78,18 @@ namespace OwlImGuiService {
                 boost::asio::io_context &ioc,
                 boost::weak_ptr<ImGuiService> parentPtr
         ) : ioc_(ioc), parentPtr_(std::move(parentPtr)) {
+
+            std::stringstream ss;
+            ss << "OwlDiscover"
+               << "\n   ProgramVersion " << ProgramVersion
+               << "\n   CodeVersion_GIT_REV " << CodeVersion_GIT_REV
+               << "\n   CodeVersion_GIT_TAG " << CodeVersion_GIT_TAG
+               << "\n   CodeVersion_GIT_BRANCH " << CodeVersion_GIT_BRANCH
+               << "\n   Boost " << BOOST_LIB_VERSION
+               << "\n   Dear ImGui " << IMGUI_VERSION
+               << "\n   BUILD_DATETIME " << CodeVersion_BUILD_DATETIME
+               << "\n ---------- OwlDiscover  Copyright (C) 2023 ---------- ";
+            CopyrightString = ss.str();
         }
 
     private:
@@ -471,7 +482,7 @@ namespace OwlImGuiService {
 
 
         bool show_demo_window = false;
-        bool show_another_window = false;
+        bool show_about_window = false;
         ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
         bool open = true;
@@ -496,6 +507,8 @@ namespace OwlImGuiService {
             int freeze_rows = 1;
         };
         TableConfig table_config;
+
+        std::string CopyrightString;
 
         boost::asio::awaitable<bool> co_main_loop(boost::shared_ptr<ImGuiServiceImpl> self) {
             boost::ignore_unused(self);
@@ -554,6 +567,7 @@ namespace OwlImGuiService {
                         if (ImGui::Begin("MainWindow", &open, gui_window_flags)) {
                             if (ImGui::BeginMenuBar()) {
                                 if (ImGui::BeginMenu("菜单")) {
+                                    ImGui::MenuItem("关于(About)", nullptr, &show_about_window);
                                     if (ImGui::MenuItem("退出", "Alt+F4")) {
                                         co_return true;
                                     }
@@ -609,17 +623,18 @@ namespace OwlImGuiService {
                                         ImGui::TableSetupColumn("IP", ImGuiTableColumnFlags_WidthFixed, 0.0f);
                                         ImGui::TableSetupColumn("PORT", ImGuiTableColumnFlags_WidthFixed, 0.0f);
                                         ImGui::TableSetupColumn("上次上线间隔", ImGuiTableColumnFlags_NoSort |
-                                                                            ImGuiTableColumnFlags_WidthFixed, 0.0f);
+                                                                                ImGuiTableColumnFlags_WidthFixed, 0.0f);
                                         ImGui::TableSetupColumn("降落", ImGuiTableColumnFlags_NoSort |
                                                                         ImGuiTableColumnFlags_WidthFixed, 0.0f);
                                         ImGui::TableSetupColumn("停止", ImGuiTableColumnFlags_NoSort |
                                                                         ImGuiTableColumnFlags_WidthFixed, 0.0f);
                                         ImGui::TableSetupColumn("删除", ImGuiTableColumnFlags_NoSort |
-                                                                          ImGuiTableColumnFlags_WidthFixed, 0.0f);
+                                                                        ImGuiTableColumnFlags_WidthFixed, 0.0f);
                                         ImGui::TableSetupColumn("第一次发现时间", ImGuiTableColumnFlags_NoSort |
-                                                                             ImGuiTableColumnFlags_WidthFixed, 0.0f);
+                                                                                  ImGuiTableColumnFlags_WidthFixed,
+                                                                0.0f);
                                         ImGui::TableSetupColumn("上次上线时间", ImGuiTableColumnFlags_NoSort |
-                                                                            ImGuiTableColumnFlags_WidthFixed, 0.0f);
+                                                                                ImGuiTableColumnFlags_WidthFixed, 0.0f);
                                         ImGui::TableSetupScrollFreeze(table_config.freeze_cols,
                                                                       table_config.freeze_rows);
 
@@ -669,12 +684,11 @@ namespace OwlImGuiService {
                     }
 
 
-                    if (show_another_window) {
-                        ImGui::Begin("Another Window",
-                                     &show_another_window);   // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
-                        ImGui::Text("Hello from another window!");
-                        if (ImGui::Button("Close Me"))
-                            show_another_window = false;
+                    if (show_about_window) {
+                        ImGui::Begin("关于", &show_about_window, ImGuiWindowFlags_AlwaysAutoResize);
+                        ImGui::Text(CopyrightString.c_str());
+                        if (ImGui::Button("关闭"))
+                            show_about_window = false;
                         ImGui::End();
                     }
 
@@ -685,7 +699,7 @@ namespace OwlImGuiService {
                     const float clear_color_with_alpha[4] = {clear_color.x * clear_color.w,
                                                              clear_color.y * clear_color.w,
                                                              clear_color.z * clear_color.w, clear_color.w};
-                    g_pd3dDeviceContext->OMSetRenderTargets(1, &g_mainRenderTargetView, NULL);
+                    g_pd3dDeviceContext->OMSetRenderTargets(1, &g_mainRenderTargetView, nullptr);
                     g_pd3dDeviceContext->ClearRenderTargetView(g_mainRenderTargetView, clear_color_with_alpha);
                     ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 
