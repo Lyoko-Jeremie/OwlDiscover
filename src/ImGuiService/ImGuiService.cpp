@@ -242,26 +242,44 @@ namespace OwlImGuiService {
 
 //                BOOST_LOG_OWL(trace) << "ImGuiServiceImpl::new_state sort";
                 // re short it
-//                items.sort();
-                auto now = OwlDiscoverState::DiscoverStateItem::now();
-                items.sort([&now](
-                        const OwlDiscoverState::DiscoverStateItem &a,
-                        const OwlDiscoverState::DiscoverStateItem &b
-                ) {
-                    auto at = a.calcDurationSecond(now);
-                    auto bt = b.calcDurationSecond(now);
-                    if (at == bt) {
-                        return a < b;
-                    }
-                    if (at < bt) {
-                        return true;
-                    }
-                });
-
+                sortItem();
 //                BOOST_LOG_OWL(trace) << "ImGuiServiceImpl::new_state end";
             });
 
         }
+
+    private:
+
+        void sortItem() {
+//                items.sort();
+            auto now = OwlDiscoverState::DiscoverStateItem::now();
+            items.sort([&now](
+                    const OwlDiscoverState::DiscoverStateItem &a,
+                    const OwlDiscoverState::DiscoverStateItem &b
+            ) {
+                auto at = a.calcDurationSecond(now);
+                auto bt = b.calcDurationSecond(now);
+                if (at < bt) {
+                    return true;
+                }
+                if (at == bt) {
+                    return a < b;
+                }
+                return false;
+            });
+        }
+
+        void deleteItem(const std::string &s) {
+            BOOST_LOG_OWL(trace) << "deleteItem " << s;
+            auto &accIp = items.get<OwlDiscoverState::DiscoverStateItem::IP>();
+            auto n = accIp.erase(s);
+            BOOST_LOG_OWL(trace) << "deleteItem " << n;
+        }
+
+        void cleanItem() {
+            items.clear();
+        }
+
 
     private:
         SDL_Window *window = nullptr;
@@ -417,6 +435,32 @@ namespace OwlImGuiService {
         bool open = true;
         ImGuiWindowFlags gui_window_flags = 0;
 
+        struct TableConfig {
+            ImGuiTableFlags table_flags =
+                    ImGuiTableFlags_Reorderable
+                    //                    | ImGuiTableFlags_Sortable
+                    //                    | ImGuiTableFlags_SortMulti
+                    | ImGuiTableFlags_RowBg
+                    | ImGuiTableFlags_Borders
+                    | ImGuiTableFlags_BordersH
+                    | ImGuiTableFlags_BordersOuterH
+                    | ImGuiTableFlags_BordersInnerH
+                    | ImGuiTableFlags_BordersV
+                    | ImGuiTableFlags_BordersOuterV
+                    | ImGuiTableFlags_BordersInnerV
+                    | ImGuiTableFlags_BordersOuter
+                    | ImGuiTableFlags_BordersInner
+                    | ImGuiTableFlags_ScrollY
+                    | ImGuiTableFlags_SizingFixedFit;
+            int freeze_cols = 1;
+            int freeze_rows = 1;
+            float row_min_height = 0.0f; // Auto
+            float inner_width_with_scroll = 0.0f; // Auto-extend
+            bool show_headers = true;
+            bool show_wrapped_text = false;
+        };
+        TableConfig table_config;
+
         boost::asio::awaitable<bool> co_main_loop(boost::shared_ptr<ImGuiServiceImpl> self) {
             boost::ignore_unused(self);
 
@@ -496,15 +540,20 @@ namespace OwlImGuiService {
                                 }
                             }
                             ImGui::SameLine();
-                            ImGui::Button("StopAll");
+                            if (ImGui::Button("StopAll")) {
+                            }
                             ImGui::SameLine();
-                            ImGui::Button("LandAll");
+                            if (ImGui::Button("LandAll")) {
+                            }
                             ImGui::SameLine();
-                            ImGui::Button("ClearAll");
+                            if (ImGui::Button("ClearAll")) {
+                                cleanItem();
+                            }
 
                             const float footer_height_to_reserve =
                                     ImGui::GetStyle().ItemSpacing.y + ImGui::GetFrameHeightWithSpacing();
-                            {
+
+                            if constexpr (true) {
                                 ImGui::BeginChild("AddrList", ImVec2(0, -footer_height_to_reserve),
                                                   true, ImGuiWindowFlags_HorizontalScrollbar);
 
@@ -512,46 +561,68 @@ namespace OwlImGuiService {
                                 if (accRc.empty()) {
                                     ImGui::Text("Empty");
                                 } else {
-//                                    ImGui::Text("I ");
-//                                    ImGui::SameLine();
-//                                    auto s = std::string{};
-//                                    s.resize(16, ' ');
-//                                    ImGui::Text(("IP:PORT" + s).c_str());
-//                                    ImGui::SameLine();
-//                                    ImGui::Text(("FirstTime" + s).c_str());
-//                                    ImGui::SameLine();
-//                                    ImGui::Text(("LastTime" + s).c_str());
-//                                    ImGui::SameLine();
-//                                    ImGui::Text(("LastSee" + s).c_str());
-//                                    ImGui::Text((std::string{}
-//                                                 + "I\t"
-//                                                 + "IP:PORT\t\t\t\t\t\t"
-//                                                 + "FirstTime\t\t\t\t\t\t"
-//                                                 + "LastTime\t\t\t\t\t\t"
-//                                                 + "LastSee\t\t\t\t\t\t").c_str());
-//                                    ImGui::SameLine();
-//                                    ImGui::Button("Land");
-//                                    ImGui::SameLine();
-//                                    ImGui::Button("Stop");
-//                                    ImGui::SameLine();
-//                                    ImGui::Button("Delete");
-                                }
-                                for (size_t i = 0; i < accRc.size(); ++i) {
-                                    auto &n = accRc.at(i);
-                                    ImGui::Text((
-                                                        boost::lexical_cast<std::string>(i) + "\t"
-                                                        + n.ip + std::string{":"} +
-                                                        boost::lexical_cast<std::string>(n.port) + "\t"
-                                                        + n.cacheFirstTime + "\t"
-                                                        + n.cacheLastTime + "\t"
-                                                        + n.nowDuration() + "\t"
-                                                ).c_str());
-                                    ImGui::SameLine();
-                                    ImGui::Button("Land");
-                                    ImGui::SameLine();
-                                    ImGui::Button("Stop");
-                                    ImGui::SameLine();
-                                    ImGui::Button("Delete");
+                                    if (ImGui::BeginTable("AddrTable", 9,
+                                                          table_config.table_flags,
+                                                          ImVec2(0, 0))) {
+
+                                        ImGui::TableSetupColumn("I", ImGuiTableColumnFlags_NoSort |
+                                                                     ImGuiTableColumnFlags_WidthFixed |
+                                                                     ImGuiTableColumnFlags_NoHide, 0.0f);
+                                        ImGui::TableSetupColumn("IP", ImGuiTableColumnFlags_WidthFixed, 0.0f);
+                                        ImGui::TableSetupColumn("PORT", ImGuiTableColumnFlags_WidthFixed, 0.0f);
+                                        ImGui::TableSetupColumn("FirstTime", ImGuiTableColumnFlags_NoSort |
+                                                                             ImGuiTableColumnFlags_WidthFixed, 0.0f);
+                                        ImGui::TableSetupColumn("LastTime", ImGuiTableColumnFlags_NoSort |
+                                                                            ImGuiTableColumnFlags_WidthFixed, 0.0f);
+                                        ImGui::TableSetupColumn("Duration", ImGuiTableColumnFlags_NoSort |
+                                                                            ImGuiTableColumnFlags_WidthFixed, 0.0f);
+                                        ImGui::TableSetupColumn("Land", ImGuiTableColumnFlags_NoSort |
+                                                                        ImGuiTableColumnFlags_WidthFixed, 0.0f);
+                                        ImGui::TableSetupColumn("Stop", ImGuiTableColumnFlags_NoSort |
+                                                                        ImGuiTableColumnFlags_WidthFixed, 0.0f);
+                                        ImGui::TableSetupColumn("Delete", ImGuiTableColumnFlags_NoSort |
+                                                                          ImGuiTableColumnFlags_WidthFixed, 0.0f);
+                                        ImGui::TableSetupScrollFreeze(table_config.freeze_cols,
+                                                                      table_config.freeze_rows);
+
+                                        ImGui::TableHeadersRow();
+
+                                        for (size_t i = 0; i < accRc.size(); ++i) {
+                                            auto &n = accRc.at(i);
+                                            ImGui::TableNextRow();
+//                                            ImGui::TableNextColumn();
+//                                            ImGui::Text((
+//                                                                boost::lexical_cast<std::string>(i) + "\t"
+//                                                                + n.ip + std::string{":"} +
+//                                                                boost::lexical_cast<std::string>(n.port) + "\t"
+//                                                                + n.cacheFirstTime + "\t"
+//                                                                + n.cacheLastTime + "\t"
+//                                                                + n.nowDuration() + "\t"
+//                                                        ).c_str());
+                                            ImGui::TableNextColumn();
+                                            ImGui::Text(boost::lexical_cast<std::string>(i).c_str());
+                                            ImGui::TableNextColumn();
+                                            ImGui::Text(n.ip.c_str());
+                                            ImGui::TableNextColumn();
+                                            ImGui::Text(boost::lexical_cast<std::string>(n.port).c_str());
+                                            ImGui::TableNextColumn();
+                                            ImGui::Text(n.cacheFirstTime.c_str());
+                                            ImGui::TableNextColumn();
+                                            ImGui::Text(n.cacheLastTime.c_str());
+                                            ImGui::TableNextColumn();
+                                            ImGui::Text(n.nowDuration().c_str());
+                                            ImGui::TableNextColumn();
+                                            if (ImGui::SmallButton(("Land##" + n.ip).c_str())) {}
+                                            ImGui::TableNextColumn();
+                                            if (ImGui::SmallButton(("Stop##" + n.ip).c_str())) {}
+                                            ImGui::TableNextColumn();
+                                            if (ImGui::SmallButton(("Delete##" + n.ip).c_str())) {
+                                                BOOST_LOG_OWL(trace) << R"((ImGui::Button("Delete")) )" << n.ip;
+                                                deleteItem(n.ip);
+                                            }
+                                        }
+                                        ImGui::EndTable();
+                                    }
                                 }
 
                                 ImGui::EndChild();
