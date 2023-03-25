@@ -732,7 +732,7 @@ namespace OwlImGuiService {
                                 do_all(OwlMailDefine::ControlCmd::query);
                             }
                             ImGui::SameLine();
-                            HelpMarker("查询并刷新已列出设备是否在线，对固件版本无要求");
+                            HelpMarker("查询并刷新已列出设备是否在线\n需要(6.1.11.23.03.23d.e2b087f8)以上固件支持。");
                             ImGui::SameLine();
                             ImGui::Text("指令模式：");
                             ImGui::SameLine();
