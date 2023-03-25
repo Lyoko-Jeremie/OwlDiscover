@@ -89,12 +89,6 @@ add_definitions(-DBOOST_ENABLE_ASSERT_HANDLER)  #
 
 option(USE_DYNAMIC_BOOST "Config USE_DYNAMIC_BOOST")
 
-if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-    message(STATUS "enable -O1 when debug to resolve 'string table overflow at offset' 'too big' error on mingw")
-    # -O1 to resolve "string table overflow at offset" error on mingw
-    #    add_definitions(-Wall -Wextra -O1 -g)
-endif ()
-
 set(CMAKE_THREAD_PREFER_PTHREAD ON)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
@@ -301,8 +295,15 @@ add_executable(${ProjectMainName}
 if (CMAKE_BUILD_TYPE STREQUAL "Release")
     # disable console window
     target_link_options(${ProjectMainName} PRIVATE -mwindows)
+    add_compile_options(-Wall -Wextra -O3)
 endif ()
 
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+    message(STATUS "enable -O1 when debug to resolve 'string table overflow at offset' 'too big' error on mingw")
+    # -O1 to resolve "string table overflow at offset" error on mingw
+    # add_compile_options(-Wall -Wextra -O1 -g)
+    add_compile_options(-Wall -Wextra -g)
+endif ()
 
 target_link_libraries(${ProjectMainName} ${CMAKE_THREAD_LIBS_INIT})
 

@@ -781,7 +781,7 @@ namespace OwlImGuiService {
                         ImGui::Begin("关于", &show_about_window, ImGuiWindowFlags_AlwaysAutoResize);
                         ImGui::Text(CopyrightString.c_str());
                         ImGui::Text("广州市鑫广飞信息科技有限公司 版权所有 2023");
-                        ImGui::Text("");
+                        ImGui::Text("  ");
                         if (ImGui::Button("关闭"))
                             show_about_window = false;
                         ImGui::End();
@@ -904,6 +904,7 @@ namespace OwlImGuiService {
 
         m->callbackRunner = [](OwlMailDefine::MailUdpControl2Control &&d) {
             // ignore
+            boost::ignore_unused(d);
         };
 
         mailbox_udp_->sendA2B(std::move(m));
@@ -921,6 +922,7 @@ namespace OwlImGuiService {
         m->controlCmdData = std::move(data);
 
         m->callbackRunner = [this, self = shared_from_this(), a](OwlMailDefine::MailHttpControl2Control &&d) {
+            boost::ignore_unused(d);
             impl->new_state(a);
         };
 
