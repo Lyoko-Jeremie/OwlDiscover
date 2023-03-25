@@ -212,6 +212,40 @@ namespace OwlImGuiService {
 
         }
 
+        void new_state(const boost::shared_ptr<OwlDiscoverState::DiscoverStateItem> &a) {
+            BOOST_ASSERT(a);
+            BOOST_ASSERT(!weak_from_this().expired());
+
+            boost::asio::dispatch(ioc_, [this, a, self = shared_from_this()]() {
+                BOOST_ASSERT(a);
+                BOOST_ASSERT(self);
+
+                auto &accIp = items.get<OwlDiscoverState::DiscoverStateItem::IP>();
+                auto accIpEnd = accIp.end();
+                BOOST_LOG_OWL(trace) << "ImGuiServiceImpl::new_state DiscoverStateItem a " << a->ip;
+
+                auto it = accIp.find(a->ip);
+                if (it != accIpEnd) {
+                    // update
+                    accIp.modify(it, [&a](OwlDiscoverState::DiscoverStateItem &n) {
+                        n.lastTime = a->lastTime;
+                        n.port = a->port;
+                        n.updateCache();
+                    });
+                } else {
+                    // insert
+                    auto b = *a;
+                    b.updateCache();
+                    items.emplace_back(b);
+                }
+
+                // re short it
+                sortItem();
+
+            });
+
+        }
+
         void new_state(const boost::shared_ptr<OwlDiscoverState::DiscoverState> &s) {
             BOOST_ASSERT(s);
             BOOST_ASSERT(!weak_from_this().expired());
@@ -223,7 +257,7 @@ namespace OwlImGuiService {
                 auto &accIp = items.get<OwlDiscoverState::DiscoverStateItem::IP>();
                 auto accIpEnd = accIp.end();
                 for (const auto &a: s->items) {
-                    BOOST_LOG_OWL(trace) << "ImGuiServiceImpl::new_state a " << a.ip;
+                    BOOST_LOG_OWL(trace) << "ImGuiServiceImpl::new_state DiscoverState a " << a.ip;
 
                     auto it = accIp.find(a.ip);
                     if (it != accIpEnd) {
@@ -813,6 +847,7 @@ namespace OwlImGuiService {
                 if (data->state) {
                     impl->new_state(data->state);
                 } else {
+                    BOOST_LOG_OWL(warning) << "ImGuiService mailbox_ig_->receiveA2B (data->state) else";
                 }
 
                 mailbox_ig_->sendB2A(std::move(m));
@@ -820,6 +855,18 @@ namespace OwlImGuiService {
         });
 
         mailbox_mc_->receiveB2A([this](OwlMailDefine::MailMulticast2Control &&data) {
+            if (data->runner) {
+                data->runner(data);
+            }
+        });
+
+        mailbox_udp_->receiveB2A([this](OwlMailDefine::MailUdpControl2Control &&data) {
+            if (data->runner) {
+                data->runner(data);
+            }
+        });
+
+        mailbox_http_->receiveB2A([this](OwlMailDefine::MailHttpControl2Control &&data) {
             if (data->runner) {
                 data->runner(data);
             }
@@ -865,11 +912,16 @@ namespace OwlImGuiService {
     void ImGuiService::sendCmdHttp(boost::shared_ptr<OwlMailDefine::ControlCmdData> data) {
         auto m = boost::make_shared<OwlMailDefine::MailControl2HttpControl::element_type>();
 
+        auto a = boost::make_shared<OwlDiscoverState::DiscoverStateItem>(
+                data->ip,
+                0
+        );
+
         BOOST_ASSERT(data);
         m->controlCmdData = std::move(data);
 
-        m->callbackRunner = [](OwlMailDefine::MailHttpControl2Control &&d) {
-            // ignore
+        m->callbackRunner = [this, self = shared_from_this(), a](OwlMailDefine::MailHttpControl2Control &&d) {
+            impl->new_state(a);
         };
 
         mailbox_http_->sendA2B(std::move(m));
