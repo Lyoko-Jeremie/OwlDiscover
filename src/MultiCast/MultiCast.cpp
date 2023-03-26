@@ -78,7 +78,7 @@ namespace OwlMultiCast {
             return;
         }
         // now we receive a package
-        BOOST_LOG_OWL(trace) << "MultiCast do_receive_json() we receive a " << multiCastFlag << " package come from: "
+        BOOST_LOG_OWL(trace_multicast) << "MultiCast do_receive_json() we receive a " << multiCastFlag << " package come from: "
                              << "receiver_endpoint_ "
                              << receiver_endpoint->address() << ":" << receiver_endpoint->port();
 
@@ -161,12 +161,12 @@ namespace OwlMultiCast {
         auto m = boost::make_shared<OwlMailDefine::MailMulticast2Control::element_type>();
         m->runner = data->callbackRunner;
 
-        BOOST_LOG_OWL(trace) << "MultiCast::mailControl ";
+        BOOST_LOG_OWL(trace_multicast) << "MultiCast::mailControl ";
 
         switch (data->cmd) {
             case OwlMailDefine::MulticastCmd::query:
                 boost::asio::dispatch(ioc_, [this, self = shared_from_this()]() {
-                    BOOST_LOG_OWL(trace) << "MultiCast::mailControl OwlMailDefine::MulticastCmd::query";
+                    BOOST_LOG_OWL(trace_multicast) << "MultiCast::mailControl OwlMailDefine::MulticastCmd::query";
                     do_send();
                 });
                 break;

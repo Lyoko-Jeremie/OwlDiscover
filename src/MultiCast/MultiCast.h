@@ -70,7 +70,7 @@ namespace OwlMultiCast {
 
 
             mailbox_mc_->receiveA2B([this](OwlMailDefine::MailControl2Multicast &&data) {
-                BOOST_LOG_OWL(trace) << "MultiCast mailbox_mc_->receiveA2B";
+                BOOST_LOG_OWL(trace_multicast) << "MultiCast mailbox_mc_->receiveA2B";
                 mailControl(std::move(data));
             });
             mailbox_ig_->receiveB2A([this](OwlMailDefine::MailImGui2Control &&data) {

@@ -28,6 +28,11 @@ namespace OwlMailDefine {
     };
     struct HttpControl2Control {
 
+        boost::shared_ptr<OwlDiscoverState::DiscoverStateItem> discoverStateItem;
+        boost::shared_ptr<std::string> httpResponseData;
+
+        bool updateOnly = false;
+
         std::function<void(boost::shared_ptr<HttpControl2Control>)> runner;
     };
 

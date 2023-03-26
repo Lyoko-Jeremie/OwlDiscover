@@ -38,6 +38,8 @@ namespace OwlLog {
             "trace_map",
             "trace_dtor",
             "trace_json",
+            "trace_udp",
+            "trace_http",
             "trace_multicast",
             "trace",
             "debug_sp_w",
@@ -168,9 +170,9 @@ namespace OwlLog {
                 #ifndef DEBUG_log_TAG
                 && severity != severity_level::trace_cmd_tag
                 #endif // DEBUG_log_TAG
-                #ifndef DEBUG_log_HTTP
+                #ifndef DEBUG_log_cmd_HTTP
                 && severity != severity_level::trace_cmd_http
-                #endif // DEBUG_log_HTTP
+                #endif // DEBUG_log_cmd_HTTP
                 #ifndef DEBUG_log_SerialPortWrite
                 && severity != severity_level::trace_cmd_sp_w
                 #endif // DEBUG_log_SerialPortWrite
@@ -180,6 +182,12 @@ namespace OwlLog {
                 #ifndef DEBUG_log_JSON
                 && severity != severity_level::trace_json
                 #endif // DEBUG_log_JSON
+                #ifndef DEBUG_log_http
+                && severity != severity_level::trace_http
+                #endif // DEBUG_log_http
+                #ifndef DEBUG_log_udp
+                && severity != severity_level::trace_udp
+                #endif // DEBUG_log_udp
                 #ifndef DEBUG_log_multicast
                 && severity != severity_level::trace_multicast
                 #endif // DEBUG_log_multicast

@@ -230,6 +230,15 @@ namespace OwlImGuiService {
                     accIp.modify(it, [&a](OwlDiscoverState::DiscoverStateItem &n) {
                         n.lastTime = a->lastTime;
                         n.port = a->port;
+                        if (!a->programVersion.empty()) {
+                            n.programVersion = a->programVersion;
+                        }
+                        if (!a->gitRev.empty()) {
+                            n.gitRev = a->gitRev;
+                        }
+                        if (!a->buildTime.empty()) {
+                            n.buildTime = a->buildTime;
+                        }
                         n.updateCache();
                     });
                 } else {
@@ -261,6 +270,15 @@ namespace OwlImGuiService {
                     accIp.modify(it, [&a](OwlDiscoverState::DiscoverStateItem &n) {
                         n.lastTime = a->lastTime;
                         n.port = a->port;
+                        if (!a->programVersion.empty()) {
+                            n.programVersion = a->programVersion;
+                        }
+                        if (!a->gitRev.empty()) {
+                            n.gitRev = a->gitRev;
+                        }
+                        if (!a->buildTime.empty()) {
+                            n.buildTime = a->buildTime;
+                        }
                         n.updateCache();
                     });
                 } else {
@@ -296,6 +314,15 @@ namespace OwlImGuiService {
                         accIp.modify(it, [&a](OwlDiscoverState::DiscoverStateItem &n) {
                             n.lastTime = a.lastTime;
                             n.port = a.port;
+                            if (!a.programVersion.empty()) {
+                                n.programVersion = a.programVersion;
+                            }
+                            if (!a.gitRev.empty()) {
+                                n.gitRev = a.gitRev;
+                            }
+                            if (!a.buildTime.empty()) {
+                                n.buildTime = a.buildTime;
+                            }
                             n.updateCache();
                         });
                     } else {
@@ -603,6 +630,7 @@ namespace OwlImGuiService {
                     | ImGuiTableFlags_BordersInnerV
                     | ImGuiTableFlags_BordersOuter
                     | ImGuiTableFlags_BordersInner
+                    | ImGuiTableFlags_ScrollX
                     | ImGuiTableFlags_ScrollY
                     | ImGuiTableFlags_SizingFixedFit;
             int freeze_cols = 1;
@@ -777,7 +805,7 @@ namespace OwlImGuiService {
                                 if (accRc.empty()) {
                                     ImGui::Text("空列表");
                                 } else {
-                                    int col = 12;
+                                    int col = 15;
                                     if (ImGui::BeginTable("AddrTable", col,
                                                           table_config.table_flags,
                                                           ImVec2(0, 0))) {
@@ -807,6 +835,15 @@ namespace OwlImGuiService {
                                                                 0.0f);
                                         ImGui::TableSetupColumn("上次上线时间", ImGuiTableColumnFlags_NoSort |
                                                                                 ImGuiTableColumnFlags_WidthFixed, 0.0f);
+                                        ImGui::TableSetupColumn("ProgramVersion", ImGuiTableColumnFlags_NoSort |
+                                                                                  ImGuiTableColumnFlags_WidthFixed,
+                                                                0.0f);
+                                        ImGui::TableSetupColumn("ProgramGitRev", ImGuiTableColumnFlags_NoSort |
+                                                                                 ImGuiTableColumnFlags_WidthFixed,
+                                                                0.0f);
+                                        ImGui::TableSetupColumn("ProgramBuildTime", ImGuiTableColumnFlags_NoSort |
+                                                                                    ImGuiTableColumnFlags_WidthFixed,
+                                                                0.0f);
                                         ImGui::TableSetupScrollFreeze(table_config.freeze_cols,
                                                                       table_config.freeze_rows);
 
@@ -864,6 +901,12 @@ namespace OwlImGuiService {
                                             ImGui::Text(n.cacheFirstTime.c_str());
                                             ImGui::TableNextColumn();
                                             ImGui::Text(n.cacheLastTime.c_str());
+                                            ImGui::TableNextColumn();
+                                            ImGui::Text(n.programVersion.c_str());
+                                            ImGui::TableNextColumn();
+                                            ImGui::Text(n.gitRev.c_str());
+                                            ImGui::TableNextColumn();
+                                            ImGui::Text(n.buildTime.c_str());
                                         }
                                         ImGui::EndTable();
                                     }
@@ -982,8 +1025,17 @@ namespace OwlImGuiService {
         });
 
         mailbox_http_->receiveB2A([this](OwlMailDefine::MailHttpControl2Control &&data) {
-            if (data->runner) {
-                data->runner(data);
+            if (data->discoverStateItem) {
+                if (data->updateOnly) {
+                    auto &item = data->discoverStateItem;
+                    impl->update_state(item);
+                } else {
+                    auto &item = data->discoverStateItem;
+                    impl->new_state(item);
+                }
+                if (data->runner) {
+                    data->runner(data);
+                }
             }
         });
     }
@@ -1053,7 +1105,7 @@ namespace OwlImGuiService {
 
         m->callbackRunner = [this, self = shared_from_this(), a](OwlMailDefine::MailHttpControl2Control &&d) {
             boost::ignore_unused(d);
-            impl->new_state(a);
+//            impl->new_state(a);
         };
 
         mailbox_http_->sendA2B(std::move(m));

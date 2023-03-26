@@ -20,6 +20,10 @@ namespace OwlDiscoverState {
         boost::posix_time::ptime firstTime;
         boost::posix_time::ptime lastTime;
 
+        std::string programVersion;
+        std::string gitRev;
+        std::string buildTime;
+
         std::string cacheFirstTime;
         std::string cacheLastTime;
 
