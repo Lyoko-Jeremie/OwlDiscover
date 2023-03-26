@@ -1,6 +1,7 @@
 // jeremie
 
 #include "OwlLog.h"
+#include <random>
 #include <boost/core/null_deleter.hpp>
 #include <boost/log/expressions.hpp>
 #include <boost/log/sinks/sync_frontend.hpp>
@@ -19,6 +20,8 @@
 
 namespace OwlLog {
     thread_local std::string threadName;
+
+    uint32_t globalClientId;
 
     // https://zhuanlan.zhihu.com/p/389736260
     boost::log::sources::severity_logger<severity_level> slg;
@@ -85,6 +88,18 @@ namespace OwlLog {
     BOOST_LOG_ATTRIBUTE_KEYWORD(severity, "Severity", severity_level)
 
     void init_logging() {
+
+        // generate client id
+        std::mt19937_64 engine(std::random_device{}());
+        std::uniform_int_distribution<uint32_t> distribution;
+        globalClientId = distribution(engine);
+        for (int i = 0; i < 100; ++i) {
+            if (globalClientId < 100) {
+                globalClientId = distribution(engine);
+            } else {
+                break;
+            }
+        }
 
         // https://stackoverflow.com/questions/15853981/boost-log-2-0-empty-severity-level-in-logs
         boost::log::register_simple_formatter_factory<severity_level, char>("Severity");
@@ -170,7 +185,7 @@ namespace OwlLog {
                 #endif // DEBUG_log_multicast
                 #ifndef DEBUG_log_SerialPortRead
                 && severity != severity_level::trace_cmd_sp_r
-                #endif // DEBUG_log_SerialPortRead
+#endif // DEBUG_log_SerialPortRead
         );
 
         BOOST_LOG_OWL(info_VSERION)

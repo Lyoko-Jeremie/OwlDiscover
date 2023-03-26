@@ -37,6 +37,8 @@ namespace OwlLog {
 
     extern thread_local std::string threadName;
 
+    extern uint32_t globalClientId;
+
     // https://stackoverflow.com/questions/60977433/including-thread-name-in-boost-log
     void init_logging();
 
