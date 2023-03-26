@@ -41,6 +41,7 @@ namespace OwlLog {
             "trace_udp",
             "trace_http",
             "trace_multicast",
+            "trace_gui",
             "trace",
             "debug_sp_w",
             "debug",
@@ -191,6 +192,9 @@ namespace OwlLog {
                 #ifndef DEBUG_log_multicast
                 && severity != severity_level::trace_multicast
                 #endif // DEBUG_log_multicast
+                #ifndef DEBUG_log_gui
+                && severity != severity_level::trace_gui
+                #endif // DEBUG_log_gui
                 #ifndef DEBUG_log_SerialPortRead
                 && severity != severity_level::trace_cmd_sp_r
 #endif // DEBUG_log_SerialPortRead

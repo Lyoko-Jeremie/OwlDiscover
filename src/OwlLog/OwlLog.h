@@ -23,6 +23,7 @@ namespace OwlLog {
         trace_udp,
         trace_http,
         trace_multicast,
+        trace_gui,
         trace,
         debug_sp_w,
         debug,

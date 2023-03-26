@@ -222,7 +222,7 @@ namespace OwlImGuiService {
 
                 auto &accIp = items.get<OwlDiscoverState::DiscoverStateItem::IP>();
                 auto accIpEnd = accIp.end();
-                BOOST_LOG_OWL(trace) << "ImGuiServiceImpl::new_state DiscoverStateItem a " << a->ip;
+                BOOST_LOG_OWL(trace_gui) << "ImGuiServiceImpl::new_state DiscoverStateItem a " << a->ip;
 
                 auto it = accIp.find(a->ip);
                 if (it != accIpEnd) {
@@ -262,7 +262,7 @@ namespace OwlImGuiService {
 
                 auto &accIp = items.get<OwlDiscoverState::DiscoverStateItem::IP>();
                 auto accIpEnd = accIp.end();
-                BOOST_LOG_OWL(trace) << "ImGuiServiceImpl::new_state DiscoverStateItem a " << a->ip;
+                BOOST_LOG_OWL(trace_gui) << "ImGuiServiceImpl::new_state DiscoverStateItem a " << a->ip;
 
                 auto it = accIp.find(a->ip);
                 if (it != accIpEnd) {
@@ -306,7 +306,7 @@ namespace OwlImGuiService {
                 auto &accIp = items.get<OwlDiscoverState::DiscoverStateItem::IP>();
                 auto accIpEnd = accIp.end();
                 for (const auto &a: s->items) {
-                    BOOST_LOG_OWL(trace) << "ImGuiServiceImpl::new_state DiscoverState a " << a.ip;
+                    BOOST_LOG_OWL(trace_gui) << "ImGuiServiceImpl::new_state DiscoverState a " << a.ip;
 
                     auto it = accIp.find(a.ip);
                     if (it != accIpEnd) {
@@ -449,10 +449,10 @@ namespace OwlImGuiService {
         }
 
         void deleteItem(const std::string &s) {
-            BOOST_LOG_OWL(trace) << "deleteItem " << s;
+            BOOST_LOG_OWL(trace_gui) << "deleteItem " << s;
             auto &accIp = items.get<OwlDiscoverState::DiscoverStateItem::IP>();
             auto n = accIp.erase(s);
-            BOOST_LOG_OWL(trace) << "deleteItem " << n;
+            BOOST_LOG_OWL(trace_gui) << "deleteItem " << n;
         }
 
         void cleanItem() {
@@ -560,12 +560,12 @@ namespace OwlImGuiService {
 
                         if (!e) {
                             if (r) {
-                                BOOST_LOG_OWL(trace) << "ImGuiServiceImpl run() ok";
+                                BOOST_LOG_OWL(trace_gui) << "ImGuiServiceImpl run() ok";
                                 clear();
                                 safe_exit();
                                 return;
                             } else {
-                                BOOST_LOG_OWL(trace) << "ImGuiServiceImpl run() error";
+                                BOOST_LOG_OWL(error) << "ImGuiServiceImpl run() error";
                                 clear();
                                 safe_exit();
                                 return;
@@ -661,7 +661,7 @@ namespace OwlImGuiService {
                 ImGuiIO &io = ImGui::GetIO();
 
                 for (;;) {
-//                    BOOST_LOG_OWL(trace) << "ImGuiServiceImpl co_main_loop loop";
+//                    BOOST_LOG_OWL(trace_gui) << "ImGuiServiceImpl co_main_loop loop";
                     SDL_Event event;
                     while (SDL_PollEvent(&event)) {
                         ImGui_ImplSDL2_ProcessEvent(&event);
@@ -732,7 +732,6 @@ namespace OwlImGuiService {
                             if (ImGui::Button("主动发现(Multicast Query)")) {
                                 auto p = parentPtr_.lock();
                                 if (p) {
-                                    BOOST_LOG_OWL(trace) << R"(p->sendQuery())";
                                     p->sendQuery();
                                 }
                             }
@@ -876,7 +875,6 @@ namespace OwlImGuiService {
                                             }
                                             ImGui::TableNextColumn();
                                             if (ImGui::SmallButton(("Delete##" + n.ip).c_str())) {
-                                                BOOST_LOG_OWL(trace) << R"((ImGui::Button("Delete")) )" << n.ip;
                                                 deleteItem(n.ip);
                                             }
                                             if (ImGui::IsItemHovered()) {
