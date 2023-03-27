@@ -11,6 +11,7 @@
 #include <boost/asio/co_spawn.hpp>
 #include <boost/exception_ptr.hpp>
 #include <boost/core/ignore_unused.hpp>
+#include <boost/json.hpp>
 
 
 #include <boost/multi_index_container.hpp>
@@ -252,6 +253,35 @@ namespace OwlImGuiService {
             });
         }
 
+        void update_ota(std::string ip, std::string version) {
+
+            boost::asio::dispatch(ioc_, [this, ip, version, self = shared_from_this()]() {
+                BOOST_ASSERT(self);
+
+                auto &accIp = items.get<OwlDiscoverState::DiscoverStateItem::IP>();
+                auto accIpEnd = accIp.end();
+                BOOST_LOG_OWL(trace_gui) << "ImGuiServiceImpl::update_ota " << ip << " " << version;
+
+                auto it = accIp.find(ip);
+                if (it != accIpEnd) {
+                    // update
+                    accIp.modify(it, [&ip, &version](OwlDiscoverState::DiscoverStateItem &n) {
+                        if (!version.empty()) {
+                            n.versionOTA = version;
+                        }
+                        n.updateCache();
+                    });
+                } else {
+                    // insert
+                    // ignore
+                }
+
+                // re short it
+                // sortItem();
+
+            });
+        }
+
         void new_state(const boost::shared_ptr<OwlDiscoverState::DiscoverStateItem> &a) {
             BOOST_ASSERT(a);
             BOOST_ASSERT(!weak_from_this().expired());
@@ -341,6 +371,24 @@ namespace OwlImGuiService {
         }
 
     private:
+
+        void sendCmdHttpReadAllOTA() {
+            auto p = parentPtr_.lock();
+            if (p) {
+                auto &accIp = items.get<OwlDiscoverState::DiscoverStateItem::IP>();
+                auto accIpEnd = accIp.end();
+                for (auto it = accIp.begin(); it != accIpEnd; ++it) {
+                    p->sendCmdHttpReadOTA(it->ip);
+                }
+            }
+        }
+
+        void sendCmdHttpReadOTA(std::string ip) {
+            auto p = parentPtr_.lock();
+            if (p) {
+                p->sendCmdHttpReadOTA(ip);
+            }
+        }
 
         void do_all(OwlMailDefine::ControlCmd cmd) {
             auto p = parentPtr_.lock();
@@ -792,6 +840,10 @@ namespace OwlImGuiService {
                             if (ImGui::Button("清空列表")) {
                                 cleanItem();
                             }
+                            ImGui::SameLine();
+                            if (ImGui::Button("读取OTA版本")) {
+                                sendCmdHttpReadAllOTA();
+                            }
 
                             const float footer_height_to_reserve =
                                     ImGui::GetStyle().ItemSpacing.y + ImGui::GetFrameHeightWithSpacing();
@@ -804,7 +856,7 @@ namespace OwlImGuiService {
                                 if (accRc.empty()) {
                                     ImGui::Text("空列表");
                                 } else {
-                                    int col = 15;
+                                    int col = 16;
                                     if (ImGui::BeginTable("AddrTable", col,
                                                           table_config.table_flags,
                                                           ImVec2(0, 0))) {
@@ -842,6 +894,9 @@ namespace OwlImGuiService {
                                                                 0.0f);
                                         ImGui::TableSetupColumn("ProgramBuildTime", ImGuiTableColumnFlags_NoSort |
                                                                                     ImGuiTableColumnFlags_WidthFixed,
+                                                                0.0f);
+                                        ImGui::TableSetupColumn("OTAVersion", ImGuiTableColumnFlags_NoSort |
+                                                                              ImGuiTableColumnFlags_WidthFixed,
                                                                 0.0f);
                                         ImGui::TableSetupScrollFreeze(table_config.freeze_cols,
                                                                       table_config.freeze_rows);
@@ -905,6 +960,14 @@ namespace OwlImGuiService {
                                             ImGui::Text(n.gitRev.c_str());
                                             ImGui::TableNextColumn();
                                             ImGui::Text(n.buildTime.c_str());
+                                            ImGui::TableNextColumn();
+                                            if (n.versionOTA.empty()) {
+                                                if (ImGui::SmallButton(("读取OTA版本##" + n.ip).c_str())) {
+                                                    sendCmdHttpReadOTA(n.ip);
+                                                }
+                                            } else {
+                                                ImGui::Text(n.buildTime.c_str());
+                                            }
                                         }
                                         ImGui::EndTable();
                                     }
@@ -1036,6 +1099,11 @@ namespace OwlImGuiService {
                 }
             }
         });
+
+        json_parse_options_.allow_comments = true;
+        json_parse_options_.allow_trailing_commas = true;
+        json_parse_options_.max_depth = 5;
+
     }
 
     void ImGuiService::start() {
@@ -1104,6 +1172,54 @@ namespace OwlImGuiService {
         m->callbackRunner = [this, self = shared_from_this(), a](OwlMailDefine::MailHttpControl2Control &&d) {
             boost::ignore_unused(d);
 //            impl->new_state(a);
+        };
+
+        mailbox_http_->sendA2B(std::move(m));
+    }
+
+    void ImGuiService::sendCmdHttpReadOTA(std::string ip) {
+        auto m = boost::make_shared<OwlMailDefine::MailControl2HttpControl::element_type>();
+
+        auto a = boost::make_shared<OwlMailDefine::HttpRequestInfo>(
+                ip,
+                "8080",
+                "/VERSION",
+                ""
+        );
+
+        m->httpRequestInfo = std::move(a);
+
+        m->callbackRunner = [this, self = shared_from_this(), ip = ip](OwlMailDefine::MailHttpControl2Control &&d) {
+
+            BOOST_ASSERT(d->httpResponseData);
+
+            boost::system::error_code ec;
+            boost::json::value json_v = boost::json::parse(
+                    *d->httpResponseData,
+                    ec,
+                    {},
+                    json_parse_options_
+            );
+            if (ec) {
+                BOOST_LOG_OWL(warning) << "ImGuiService sendCmdHttpReadOTA() invalid package " << ec;
+                return;
+            }
+
+            try {
+                auto rr = boost::json::try_value_to<std::string>(json_v.as_object().at("version"));
+                if (rr.has_value()) {
+                    auto version = rr.value();
+                    if (impl && !version.empty()) {
+                        impl->update_ota(ip, version);
+                        return;
+                    }
+                }
+                BOOST_LOG_OWL(warning) << "ImGuiService sendCmdHttpReadOTA() version value , ip" << ip;
+            } catch (...) {
+                BOOST_LOG_OWL(warning) << "ImGuiService sendCmdHttpReadOTA() invalid json, catch "
+                                       << boost::current_exception_diagnostic_information();
+            }
+
         };
 
         mailbox_http_->sendA2B(std::move(m));

@@ -23,6 +23,7 @@ namespace OwlDiscoverState {
         std::string programVersion;
         std::string gitRev;
         std::string buildTime;
+        std::string versionOTA;
 
         std::string cacheFirstTime;
         std::string cacheLastTime;

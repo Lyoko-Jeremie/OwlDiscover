@@ -49,6 +49,8 @@ namespace OwlImGuiService {
 
         boost::shared_ptr<ImGuiServiceImpl> impl;
 
+        boost::json::parse_options json_parse_options_;
+
     public:
         void start();
 
@@ -61,6 +63,8 @@ namespace OwlImGuiService {
         void sendCmdUdp(boost::shared_ptr<OwlMailDefine::ControlCmdData> data);
 
         void sendCmdHttp(boost::shared_ptr<OwlMailDefine::ControlCmdData> data);
+
+        void sendCmdHttpReadOTA(std::string ip);
 
         auto config() {
             return config_->config();

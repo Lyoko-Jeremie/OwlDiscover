@@ -3,6 +3,8 @@
 #ifndef OWLDISCOVER_CONTROLSERVICEHTTPMAILBOX_H
 #define OWLDISCOVER_CONTROLSERVICEHTTPMAILBOX_H
 
+#include <utility>
+
 #include "../MemoryBoost.h"
 #include "./ControlServiceUdpMailBox.h"
 
@@ -10,10 +12,20 @@
 namespace OwlMailDefine {
 
     struct HttpRequestInfo : public boost::enable_shared_from_this<HttpRequestInfo> {
-        std::string data_send;
         std::string host;
         std::string port;
         std::string target;
+        std::string data_send;
+
+        HttpRequestInfo(
+                std::string host_,
+                std::string port_,
+                std::string target_,
+                std::string data_send_
+        ) : host(std::move(host_)),
+            port(std::move(port_)),
+            target(std::move(target_)),
+            data_send(std::move(data_send_)) {}
     };
 
     struct HttpControl2Control;
