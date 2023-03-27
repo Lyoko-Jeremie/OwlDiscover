@@ -6,6 +6,7 @@
 #include "../MemoryBoost.h"
 #include <chrono>
 #include <utility>
+#include <vector>
 #include <boost/asio.hpp>
 #include "../OwlLog/OwlLog.h"
 
@@ -66,9 +67,16 @@ namespace OwlImGuiService {
 
         void sendCmdHttpReadOTA(std::string ip);
 
+        void analysisOtaReturn(
+                const std::string& httpResponseData,
+                std::string ip
+        );
+
         auto config() {
             return config_->config();
         }
+
+        void scanSubnet();
 
     private:
 

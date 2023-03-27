@@ -7,11 +7,15 @@
 #include "../VERSION/CodeVersion.h"
 
 #include <sstream>
+#include <utility>
+#include <vector>
+#include <list>
 #include <boost/lexical_cast.hpp>
 #include <boost/asio/co_spawn.hpp>
 #include <boost/exception_ptr.hpp>
 #include <boost/core/ignore_unused.hpp>
 #include <boost/json.hpp>
+#include <boost/algorithm/string/find.hpp>
 
 
 #include <boost/multi_index_container.hpp>
@@ -266,6 +270,7 @@ namespace OwlImGuiService {
                 if (it != accIpEnd) {
                     // update
                     accIp.modify(it, [&ip, &version](OwlDiscoverState::DiscoverStateItem &n) {
+                        boost::ignore_unused(ip);
                         if (!version.empty()) {
                             n.versionOTA = version;
                         }
@@ -386,7 +391,14 @@ namespace OwlImGuiService {
         void sendCmdHttpReadOTA(std::string ip) {
             auto p = parentPtr_.lock();
             if (p) {
-                p->sendCmdHttpReadOTA(ip);
+                p->sendCmdHttpReadOTA(std::move(ip));
+            }
+        }
+
+        void scanSubnet() {
+            auto p = parentPtr_.lock();
+            if (p) {
+                p->scanSubnet();
             }
         }
 
@@ -803,6 +815,14 @@ namespace OwlImGuiService {
                                     "使用Broadcast广播功能主动搜索未知设备，对固件版本无要求。\n对网络影响较大，可能被限速或屏蔽，请勿频繁点击发送。"
                             );
                             ImGui::SameLine();
+                            if (ImGui::Button("扫描整个内网(Http Scan)")) {
+                                scanSubnet();
+                            }
+                            ImGui::SameLine();
+                            HelpMarker(
+                                    "使用HTTP逐个扫描内网IP，扫描速度很慢，对网络影响很大，"
+                            );
+                            ImGui::SameLine();
                             if (ImGui::Button("全部查询(Unicast Query)")) {
                                 do_all(OwlMailDefine::ControlCmd::query);
                             }
@@ -1175,7 +1195,7 @@ namespace OwlImGuiService {
         };
 
         mailbox_http_->sendA2B(std::move(m));
-    }
+    };
 
     void ImGuiService::sendCmdHttpReadOTA(std::string ip) {
         auto m = boost::make_shared<OwlMailDefine::MailControl2HttpControl::element_type>();
@@ -1190,39 +1210,126 @@ namespace OwlImGuiService {
         m->httpRequestInfo = std::move(a);
 
         m->callbackRunner = [this, self = shared_from_this(), ip = ip](OwlMailDefine::MailHttpControl2Control &&d) {
-
             BOOST_ASSERT(d->httpResponseData);
 
-            boost::system::error_code ec;
-            boost::json::value json_v = boost::json::parse(
-                    *d->httpResponseData,
-                    ec,
-                    {},
-                    json_parse_options_
-            );
-            if (ec) {
-                BOOST_LOG_OWL(warning) << "ImGuiService sendCmdHttpReadOTA() invalid package " << ec;
-                return;
+            if (d->httpResponseData && !d->httpResponseData->empty()) {
+                analysisOtaReturn(*d->httpResponseData, ip);
             }
-
-            try {
-                auto rr = boost::json::try_value_to<std::string>(json_v.as_object().at("version"));
-                if (rr.has_value()) {
-                    auto version = rr.value();
-                    if (impl && !version.empty()) {
-                        impl->update_ota(ip, version);
-                        return;
-                    }
-                }
-                BOOST_LOG_OWL(warning) << "ImGuiService sendCmdHttpReadOTA() version value , ip" << ip;
-            } catch (...) {
-                BOOST_LOG_OWL(warning) << "ImGuiService sendCmdHttpReadOTA() invalid json, catch "
-                                       << boost::current_exception_diagnostic_information();
-            }
-
         };
 
         mailbox_http_->sendA2B(std::move(m));
     }
+
+    void ImGuiService::analysisOtaReturn(const std::string &httpResponseData, std::string ip) {
+
+        boost::system::error_code ec;
+        boost::json::value json_v = boost::json::parse(
+                httpResponseData,
+                ec,
+                {},
+                json_parse_options_
+        );
+        if (ec) {
+            BOOST_LOG_OWL(warning) << "ImGuiService analysisOtaReturn() invalid package " << ec;
+            return;
+        }
+
+        try {
+            auto rr = boost::json::try_value_to<std::string>(json_v.as_object().at("version"));
+            if (rr.has_value()) {
+                auto version = rr.value();
+                if (impl && !version.empty()) {
+                    impl->update_ota(ip, version);
+                    return;
+                }
+            }
+            BOOST_LOG_OWL(warning) << "ImGuiService analysisOtaReturn() version value , ip" << ip;
+        } catch (...) {
+            BOOST_LOG_OWL(warning) << "ImGuiService analysisOtaReturn() invalid json, catch "
+                                   << boost::current_exception_diagnostic_information();
+        }
+
+    }
+
+    void ImGuiService::scanSubnet() {
+        // https://stackoverflow.com/questions/2674314/get-local-ip-address-using-boost-asio
+        auto resolver = boost::make_shared<boost::asio::ip::tcp::resolver>(ioc_);
+        boost::system::error_code ec;
+        auto host_name = boost::make_shared<std::string>(boost::asio::ip::host_name(ec));
+        if (ec) {
+            BOOST_LOG_OWL(error) << "ImGuiService scanSubnet host_name ec " << ec;
+            return;
+        }
+        resolver->async_resolve(*host_name, "", [
+                this, self = shared_from_this(), resolver, host_name
+        ](const boost::system::error_code &ec, const boost::asio::ip::tcp::resolver::results_type &results) {
+            if (ec) {
+                BOOST_LOG_OWL(error) << "ImGuiService scanSubnet resolver.async_resolve ec " << ec << " what "
+                                     << ec.what();
+                return;
+            }
+            std::vector<std::string> addrList;
+            for (auto it = results.begin(); it != results.end(); ++it) {
+                auto ep = it->endpoint();
+                if (ep.protocol() == boost::asio::ip::tcp::v4()) {
+                    auto addr = ep.address();
+                    if (addr.is_v4()) {
+                        boost::system::error_code ecc;
+                        auto as = addr.to_string(ecc);
+                        if (ecc) {
+                            BOOST_LOG_OWL(error) << "ImGuiService scanSubnet address to_string ec " << ec;
+                            continue;
+                        }
+                        addrList.emplace_back(as);
+                    }
+                }
+            }
+            if (addrList.empty()) {
+                BOOST_LOG_OWL(error) << "ImGuiService scanSubnet (addrList.empty()) ";
+                return;
+            }
+            std::string ss{"."};
+            std::list<std::string> ipList;
+            for (const auto &a: addrList) {
+                BOOST_LOG_OWL(trace) << "addrList a " << a;
+//                {
+//                    auto n = std::find_end(a.begin(), a.end(), ss.begin(), ss.end());
+//                    n.base();
+//                }
+                {
+                    auto n = boost::find_last(a, ss);
+                    std::string prefix{a.begin(), n.begin() + 1};
+                    for (int i = 1; i != 254; ++i) {
+                        ipList.push_back(prefix + boost::lexical_cast<std::string>(i));
+                    }
+                }
+            }
+            for (const auto &ip: ipList) {
+                BOOST_LOG_OWL(trace) << "send scan to " << ip;
+                auto m = boost::make_shared<OwlMailDefine::MailControl2HttpControl::element_type>();
+
+                auto a = boost::make_shared<OwlMailDefine::HttpRequestInfo>(
+                        ip,
+                        "8080",
+                        "/VERSION",
+                        ""
+                );
+
+                m->httpRequestInfo = std::move(a);
+
+                m->callbackRunner = [
+                        this, self = shared_from_this(), ip = ip
+                ](OwlMailDefine::MailHttpControl2Control &&d) {
+                    BOOST_ASSERT(d->httpResponseData);
+                    if (d->httpResponseData && !d->httpResponseData->empty()) {
+                        analysisOtaReturn(*d->httpResponseData, ip);
+                    }
+                };
+
+                mailbox_http_->sendA2B(std::move(m));
+            }
+        });
+    }
+
 
 } // OwlImGuiService
