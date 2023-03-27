@@ -33,8 +33,10 @@ namespace OwlImGuiService {
         );
 
         ~ImGuiService() {
-            mailbox_mc_->receiveB2A(nullptr);
             mailbox_ig_->receiveA2B(nullptr);
+            mailbox_mc_->receiveB2A(nullptr);
+            mailbox_udp_->receiveB2A(nullptr);
+            mailbox_http_->receiveB2A(nullptr);
         }
 
     private:
