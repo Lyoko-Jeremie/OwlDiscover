@@ -22,6 +22,7 @@ namespace OwlLog {
         trace_json,
         trace_udp,
         trace_http,
+        trace_http_error,
         trace_multicast,
         trace_gui,
         trace,

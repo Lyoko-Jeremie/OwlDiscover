@@ -64,7 +64,7 @@ namespace OwlControlService {
                         boost::asio::redirect_error(use_awaitable, ec_));
 
         if (ec_) {
-            BOOST_LOG_OWL(error) << "OwlControlService do_session ec_ " << ec_.what();
+            BOOST_LOG_OWL(trace_http_error) << "OwlControlService do_session ec_ " << ec_.what();
             co_return std::pair<bool, std::string>{false, std::string{}};
         }
 
@@ -74,7 +74,7 @@ namespace OwlControlService {
         // Make the connection on the IP address we get from a lookup
         co_await stream.async_connect(results, boost::asio::redirect_error(use_awaitable, ec_));
         if (ec_) {
-            BOOST_LOG_OWL(error) << "OwlControlService do_session ec_ " << ec_.what();
+            BOOST_LOG_OWL(trace_http_error) << "OwlControlService do_session ec_ " << ec_.what();
             co_return std::pair<bool, std::string>{false, std::string{}};
         }
 
@@ -95,7 +95,7 @@ namespace OwlControlService {
                 stream, req,
                 boost::asio::redirect_error(use_awaitable, ec_));
         if (ec_) {
-            BOOST_LOG_OWL(error) << "OwlControlService do_session ec_ " << ec_.what();
+            BOOST_LOG_OWL(trace_http_error) << "OwlControlService do_session ec_ " << ec_.what();
             co_return std::pair<bool, std::string>{false, std::string{}};
         }
 
@@ -110,7 +110,7 @@ namespace OwlControlService {
                 stream, b, res,
                 boost::asio::redirect_error(use_awaitable, ec_));
         if (ec_) {
-            BOOST_LOG_OWL(error) << "OwlControlService do_session ec_ " << ec_.what();
+            BOOST_LOG_OWL(trace_http_error) << "OwlControlService do_session ec_ " << ec_.what();
             co_return std::pair<bool, std::string>{false, std::string{}};
         }
 
@@ -170,7 +170,7 @@ namespace OwlControlService {
                 // ignore
                 return;
             default:
-                BOOST_LOG_OWL(error) << "HttpControl sendCmd switch (data->cmd)  default";
+                BOOST_LOG_OWL(trace_http_error) << "HttpControl sendCmd switch (data->cmd)  default";
                 return;
         }
 
@@ -233,17 +233,17 @@ namespace OwlControlService {
                                      }
                                  }
                                  catch (const std::exception &e) {
-                                     BOOST_LOG_OWL(error) << "HttpControl sendCmd catch std::exception "
+                                     BOOST_LOG_OWL(trace_http_error) << "HttpControl sendCmd catch std::exception "
                                                           << e.what();
                                  }
                                  catch (const std::string &e) {
-                                     BOOST_LOG_OWL(error) << "HttpControl sendCmd catch std::string " << e;
+                                     BOOST_LOG_OWL(trace_http_error) << "HttpControl sendCmd catch std::string " << e;
                                  }
                                  catch (const char *e) {
-                                     BOOST_LOG_OWL(error) << "HttpControl sendCmd catch char *e " << e;
+                                     BOOST_LOG_OWL(trace_http_error) << "HttpControl sendCmd catch char *e " << e;
                                  }
                                  catch (...) {
-                                     BOOST_LOG_OWL(error)
+                                     BOOST_LOG_OWL(trace_http_error)
                                          << "HttpControl sendCmd catch (...)"
                                          << "\n" << boost::current_exception_diagnostic_information();
                                  }
@@ -304,7 +304,7 @@ namespace OwlControlService {
                     }
                     return;
                 } else {
-                    BOOST_LOG_OWL(error) << "HttpControl send_request() error "
+                    BOOST_LOG_OWL(trace_http_error) << "HttpControl send_request() error "
                                          << " host " << host
                                          << " port " << port
                                          << " target " << target
@@ -319,24 +319,24 @@ namespace OwlControlService {
                 // https://stackoverflow.com/questions/14232814/how-do-i-make-a-call-to-what-on-stdexception-ptr
                 try { std::rethrow_exception(std::move(e)); }
                 catch (const std::exception &e) {
-                    BOOST_LOG_OWL(error) << "HttpControl co_spawn catch std::exception "
+                    BOOST_LOG_OWL(trace_http_error) << "HttpControl co_spawn catch std::exception "
                                          << e.what();
                     what = e.what();
                 }
                 catch (const std::string &e) {
-                    BOOST_LOG_OWL(error) << "HttpControl co_spawn catch std::string " << e;
+                    BOOST_LOG_OWL(trace_http_error) << "HttpControl co_spawn catch std::string " << e;
                     what = e;
                 }
                 catch (const char *e) {
-                    BOOST_LOG_OWL(error) << "HttpControl co_spawn catch char *e " << e;
+                    BOOST_LOG_OWL(trace_http_error) << "HttpControl co_spawn catch char *e " << e;
                     what = std::string{e};
                 }
                 catch (...) {
-                    BOOST_LOG_OWL(error) << "HttpControl co_spawn catch (...)"
+                    BOOST_LOG_OWL(trace_http_error) << "HttpControl co_spawn catch (...)"
                                          << "\n" << boost::current_exception_diagnostic_information();
                     what = boost::current_exception_diagnostic_information();
                 }
-                BOOST_LOG_OWL(error) << "HttpControl send_request "
+                BOOST_LOG_OWL(trace_http_error) << "HttpControl send_request "
                                      << what
                                      << "\n host " << host
                                      << " port " << port

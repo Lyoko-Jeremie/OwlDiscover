@@ -40,6 +40,7 @@ namespace OwlLog {
             "trace_json",
             "trace_udp",
             "trace_http",
+            "trace_http_error",
             "trace_multicast",
             "trace_gui",
             "trace",
@@ -171,6 +172,9 @@ namespace OwlLog {
                 #ifndef DEBUG_log_TAG
                 && severity != severity_level::trace_cmd_tag
                 #endif // DEBUG_log_TAG
+                #ifndef DEBUG_log_cmd_HTTP_error
+                && severity != severity_level::trace_http_error
+                #endif // DEBUG_log_cmd_HTTP_error
                 #ifndef DEBUG_log_cmd_HTTP
                 && severity != severity_level::trace_cmd_http
                 #endif // DEBUG_log_cmd_HTTP
