@@ -218,6 +218,26 @@ set(DearImGuiFile
 # ============================================================================================
 
 
+if (OpenCV_WORLD)
+    find_package(OpenCV REQUIRED world)
+else (OpenCV_WORLD)
+    find_package(OpenCV REQUIRED core imgcodecs aruco)
+endif (OpenCV_WORLD)
+
+
+message(STATUS "OpenCV_INCLUDE_DIRS: ${OpenCV_INCLUDE_DIRS}")
+message(STATUS "OpenCV_LIBRARY_DIRS: ${OpenCV_LIBRARY_DIRS}")
+message(STATUS "OpenCV_LIBRARIES: ${OpenCV_LIBRARIES}")
+message(STATUS "OpenCV_VERSION: ${OpenCV_VERSION}")
+message(STATUS "OpenCV ARCH: ${OpenCV_ARCH}")
+message(STATUS "OpenCV RUNTIME: ${OpenCV_RUNTIME}")
+message(STATUS "OpenCV STATIC: ${OpenCV_STATIC}")
+
+# ============================================================================================
+
+# ============================================================================================
+
+
 # https://www.mattkeeter.com/blog/2018-01-06-versioning/
 execute_process(COMMAND git log --pretty=format:'%H' -n 1
         OUTPUT_VARIABLE GIT_REV
@@ -301,7 +321,9 @@ add_executable(${ProjectMainName}
         src/ControlService/HttpControl.cpp
         src/ControlService/HttpControl.h
         src/ControlService/ControlServiceHttpMailBox.h
-        src/ControlService/OwlCmd.h)
+        src/ControlService/OwlCmd.h
+        src/ImGuiService/ImGuiDirectX11.cpp
+        src/ImGuiService/ImGuiDirectX11.h)
 
 # ============================================================================================
 
@@ -322,8 +344,8 @@ endif ()
 
 target_link_libraries(${ProjectMainName} ${CMAKE_THREAD_LIBS_INIT})
 
-include_directories(${CMAKE_SOURCE_DIR} ${Boost_INCLUDE_DIRS} ${FREETYPE_INCLUDE_DIRS} ${SDL2_INCLUDE_DIRS})
-target_link_libraries(${ProjectMainName} ${Boost_LIBRARIES} ${FREETYPE_LIBRARIES})
+include_directories(${CMAKE_SOURCE_DIR} ${Boost_INCLUDE_DIRS} ${FREETYPE_INCLUDE_DIRS} ${SDL2_INCLUDE_DIRS} ${OpenCV_INCLUDE_DIRS})
+target_link_libraries(${ProjectMainName} ${Boost_LIBRARIES} ${FREETYPE_LIBRARIES} ${OpenCV_LIBRARIES})
 link_directories(${Boost_LIBRARY_DIRS} ${SDL2_LIBDIR})
 target_link_libraries(${ProjectMainName} ${SDL2_STATIC_LIBRARIES} harfbuzz::harfbuzz)
 
