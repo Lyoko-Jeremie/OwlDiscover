@@ -1071,7 +1071,7 @@ namespace OwlImGuiService {
             TestCmdItem(
                     std::string name_,
                     std::function<void()> callback_
-            ) : name(name_), callback(callback_) {}
+            ) : name(std::move(name_)), callback(std::move(callback_)) {}
         };
 
         std::vector<TestCmdItem> testCmdList;
