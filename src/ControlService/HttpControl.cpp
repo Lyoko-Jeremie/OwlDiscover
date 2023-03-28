@@ -64,7 +64,7 @@ namespace OwlControlService {
                         boost::asio::redirect_error(use_awaitable, ec_));
 
         if (ec_) {
-            BOOST_LOG_OWL(error) << "OwlControlService do_session ec_ " << ec_;
+            BOOST_LOG_OWL(error) << "OwlControlService do_session ec_ " << ec_.what();
             co_return std::pair<bool, std::string>{false, std::string{}};
         }
 
@@ -74,7 +74,7 @@ namespace OwlControlService {
         // Make the connection on the IP address we get from a lookup
         co_await stream.async_connect(results, boost::asio::redirect_error(use_awaitable, ec_));
         if (ec_) {
-            BOOST_LOG_OWL(error) << "OwlControlService do_session ec_ " << ec_;
+            BOOST_LOG_OWL(error) << "OwlControlService do_session ec_ " << ec_.what();
             co_return std::pair<bool, std::string>{false, std::string{}};
         }
 
@@ -95,7 +95,7 @@ namespace OwlControlService {
                 stream, req,
                 boost::asio::redirect_error(use_awaitable, ec_));
         if (ec_) {
-            BOOST_LOG_OWL(error) << "OwlControlService do_session ec_ " << ec_;
+            BOOST_LOG_OWL(error) << "OwlControlService do_session ec_ " << ec_.what();
             co_return std::pair<bool, std::string>{false, std::string{}};
         }
 
@@ -110,7 +110,7 @@ namespace OwlControlService {
                 stream, b, res,
                 boost::asio::redirect_error(use_awaitable, ec_));
         if (ec_) {
-            BOOST_LOG_OWL(error) << "OwlControlService do_session ec_ " << ec_;
+            BOOST_LOG_OWL(error) << "OwlControlService do_session ec_ " << ec_.what();
             co_return std::pair<bool, std::string>{false, std::string{}};
         }
 
@@ -122,7 +122,7 @@ namespace OwlControlService {
         stream.socket().shutdown(boost::asio::ip::tcp::socket::shutdown_both, ec);
 
         if (ec && ec != boost::beast::errc::not_connected) {
-            BOOST_LOG_OWL(trace_http) << "OwlControlService do_session ec " << ec;
+            BOOST_LOG_OWL(trace_http) << "OwlControlService do_session ec " << ec.what();
         }
 
         // If we get here then the connection is closed gracefully
@@ -196,9 +196,8 @@ namespace OwlControlService {
                              BOOST_LOG_OWL(trace_http) << "HttpControl send_request resultCallback analysis_receive_json ar"
                                                        << " first " << ar.first << " second " << ar.second;
                              if (ar.first) {
-                                 auto &o = ar.second.as_object();
                                  try {
-
+                                     auto &o = ar.second.as_object();
                                      if (o.contains("cmdId") &&
                                          o.contains("packageId") &&
                                          o.contains("msg") &&
@@ -365,7 +364,7 @@ namespace OwlControlService {
                 json_parse_options_
         );
         if (ecc) {
-            BOOST_LOG_OWL(warning) << "HttpControl analysis_receive_json() invalid package " << ecc;
+            BOOST_LOG_OWL(warning) << "HttpControl analysis_receive_json() invalid package " << ecc.what();
             // ignore
             return std::pair<bool, boost::json::value>{false, {}};
         }

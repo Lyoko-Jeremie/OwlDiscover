@@ -1230,7 +1230,7 @@ namespace OwlImGuiService {
                 json_parse_options_
         );
         if (ec) {
-            BOOST_LOG_OWL(warning) << "ImGuiService analysisOtaReturn() invalid package " << ec;
+            BOOST_LOG_OWL(warning) << "ImGuiService analysisOtaReturn() invalid package " << ec.what();
             return;
         }
 
@@ -1257,7 +1257,7 @@ namespace OwlImGuiService {
         boost::system::error_code ec;
         auto host_name = boost::make_shared<std::string>(boost::asio::ip::host_name(ec));
         if (ec) {
-            BOOST_LOG_OWL(error) << "ImGuiService scanSubnet host_name ec " << ec;
+            BOOST_LOG_OWL(error) << "ImGuiService scanSubnet host_name ec " << ec.what();
             return;
         }
         resolver->async_resolve(*host_name, "", [
@@ -1277,7 +1277,7 @@ namespace OwlImGuiService {
                         boost::system::error_code ecc;
                         auto as = addr.to_string(ecc);
                         if (ecc) {
-                            BOOST_LOG_OWL(error) << "ImGuiService scanSubnet address to_string ec " << ec;
+                            BOOST_LOG_OWL(error) << "ImGuiService scanSubnet address to_string ec " << ec.what();
                             continue;
                         }
                         addrList.emplace_back(as);

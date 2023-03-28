@@ -34,7 +34,7 @@ namespace OwlControlService {
                 json_parse_options_
         );
         if (ecc) {
-            BOOST_LOG_OWL(warning) << "UdpControl do_receive_json() invalid package " << ecc;
+            BOOST_LOG_OWL(warning) << "UdpControl do_receive_json() invalid package " << ecc.what();
             return;
         }
 
@@ -124,7 +124,7 @@ namespace OwlControlService {
                         return;
                     }
                     if (ec) {
-                        BOOST_LOG_OWL(error) << "UdpControl do_receive() ec " << ec;
+                        BOOST_LOG_OWL(error) << "UdpControl do_receive() ec " << ec.what();
                         return;
                     }
                 });
@@ -156,7 +156,7 @@ namespace OwlControlService {
                         return;
                     }
                     if (ec) {
-                        BOOST_LOG_OWL(error) << "UdpControl do_receive_broadcast() ec " << ec;
+                        BOOST_LOG_OWL(error) << "UdpControl do_receive_broadcast() ec " << ec.what();
                         return;
                     }
                 });
@@ -206,7 +206,7 @@ namespace OwlControlService {
                 ](boost::system::error_code ec, std::size_t /*length*/) {
                     if (ec) {
                         BOOST_LOG_OWL(error) << "UdpControl sendBroadcast udp_broadcast_socket_.async_send_to ec "
-                                             << ec;
+                                             << ec.what();
                         return;
                     }
                     BOOST_LOG_OWL(trace_udp) << "UdpControl sendBroadcast udp_broadcast_socket_.async_send_to ok";
@@ -275,7 +275,7 @@ namespace OwlControlService {
                         this, self = shared_from_this(), S
                 ](boost::system::error_code ec, std::size_t /*length*/) {
                     if (ec) {
-                        BOOST_LOG_OWL(error) << "UdpControl sendCmd udp_socket_.async_send_to ec " << ec;
+                        BOOST_LOG_OWL(error) << "UdpControl sendCmd udp_socket_.async_send_to ec " << ec.what();
                         return;
                     }
                     BOOST_LOG_OWL(trace_udp) << "UdpControl sendCmd udp_socket_.async_send_to ok";

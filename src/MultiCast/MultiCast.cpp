@@ -30,7 +30,7 @@ namespace OwlMultiCast {
                         return;
                     }
                     if (ec) {
-                        BOOST_LOG_OWL(error) << "MultiCast do_receive() ec " << ec;
+                        BOOST_LOG_OWL(error) << "MultiCast do_receive() ec " << ec.what();
                         return;
                     }
                 });
@@ -54,7 +54,7 @@ namespace OwlMultiCast {
                 json_parse_options_
         );
         if (ecc) {
-            BOOST_LOG_OWL(warning) << "MultiCast do_receive_json() invalid package " << ecc;
+            BOOST_LOG_OWL(warning) << "MultiCast do_receive_json() invalid package " << ecc.what();
 //            do_receive();
             return;
         }
@@ -118,7 +118,7 @@ namespace OwlMultiCast {
                         return;
                     }
                     if (ec) {
-                        BOOST_LOG_OWL(error) << "MultiCast do_send() ec " << ec;
+                        BOOST_LOG_OWL(error) << "MultiCast do_send() ec " << ec.what();
                         return;
                     }
                 });
@@ -147,7 +147,7 @@ namespace OwlMultiCast {
                         return;
                     }
                     if (ec) {
-                        BOOST_LOG_OWL(error) << "MultiCast do_send_back() ec " << ec;
+                        BOOST_LOG_OWL(error) << "MultiCast do_send_back() ec " << ec.what();
                         return;
                     }
                 });
