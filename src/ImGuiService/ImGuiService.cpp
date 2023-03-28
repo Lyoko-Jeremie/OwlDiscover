@@ -10,6 +10,7 @@
 #include <utility>
 #include <vector>
 #include <list>
+#include <array>
 #include <boost/lexical_cast.hpp>
 #include <boost/asio/co_spawn.hpp>
 #include <boost/exception_ptr.hpp>
@@ -604,6 +605,8 @@ namespace OwlImGuiService {
             io.FontDefault = fontsList.at(0);
 
 
+            init_test_cmd_data();
+
             // now start loop
             start_main_loop();
             return 0;
@@ -672,6 +675,7 @@ namespace OwlImGuiService {
 
         bool show_demo_window = false;
         bool show_about_window = false;
+        bool show_test_cmd_window = false;
         ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
         bool open = true;
@@ -783,6 +787,10 @@ namespace OwlImGuiService {
                                     if (ImGui::MenuItem("经典配色(Classic)")) {
                                         ImGui::StyleColorsClassic();
                                     }
+                                    ImGui::EndMenu();
+                                }
+                                if (ImGui::BeginMenu("测试")) {
+                                    ImGui::MenuItem("控制命令", nullptr, &show_test_cmd_window);
                                     ImGui::EndMenu();
                                 }
                                 ImGui::EndMenuBar();
@@ -1018,6 +1026,10 @@ namespace OwlImGuiService {
                         ImGui::End();
                     }
 
+                    if (show_test_cmd_window) {
+                        show_test_cmd();
+                    }
+
 
                     // Rendering
                     ImGui::Render();
@@ -1050,6 +1062,78 @@ namespace OwlImGuiService {
             boost::ignore_unused(self);
             co_return true;
 
+        }
+
+        struct TestCmdItem {
+            std::string name;
+            std::function<void()> callback;
+
+            TestCmdItem(
+                    std::string name_,
+                    std::function<void()> callback_
+            ) : name(name_), callback(callback_) {}
+        };
+
+        std::vector<TestCmdItem> testCmdList;
+
+        void init_test_cmd_data() {
+            testCmdList.emplace_back("起飞##cmd_takeoff", []() {
+            });
+            testCmdList.emplace_back("降落##cmd_land", []() {
+            });
+            testCmdList.emplace_back("校准##cmd_calibrate", []() {
+            });
+            testCmdList.emplace_back("前##cmd_forward", []() {
+            });
+            testCmdList.emplace_back("后##cmd_back", []() {
+            });
+            testCmdList.emplace_back("左##cmd_left", []() {
+            });
+            testCmdList.emplace_back("右##cmd_right", []() {
+            });
+            testCmdList.emplace_back("上##cmd_up", []() {
+            });
+            testCmdList.emplace_back("下##cmd_down", []() {
+            });
+            testCmdList.emplace_back("顺##cmd_cw", []() {
+            });
+            testCmdList.emplace_back("逆##cmd_ccw", []() {
+            });
+            BOOST_LOG_OWL(trace_gui) << "testCmdList init_test_cmd_data " << testCmdList.size();
+        }
+
+        std::array<int, 3> goto_pos{0, 0, 0};
+
+        void show_test_cmd() {
+            BOOST_LOG_OWL(trace_gui) << "show_test_cmd start";
+            ImGui::Begin("测试控制", &show_test_cmd_window);
+            ImVec2 button_sz(60, 30);
+            BOOST_LOG_OWL(trace_gui) << "show_test_cmd goto";
+            ImGui::InputInt3("Goto##cmd_Goto_inpot", goto_pos.data());
+            ImGui::SameLine();
+            if (ImGui::Button("Goto##cmd_Goto", button_sz)) {
+                // TODO
+            }
+            ImGuiStyle &style = ImGui::GetStyle();
+            float window_visible_x2 = ImGui::GetWindowPos().x + ImGui::GetWindowContentRegionMax().x;
+            BOOST_LOG_OWL(trace_gui) << "show_test_cmd testCmdList start";
+            BOOST_LOG_OWL(trace_gui) << "testCmdList size " << testCmdList.size();
+            for (size_t i = 0; i != testCmdList.size(); ++i) {
+                auto a = testCmdList.at(i);
+                BOOST_LOG_OWL(trace_gui) << "show_test_cmd " << a.name;
+                if (ImGui::Button(a.name.c_str(), button_sz)) {
+                    if (a.callback) {
+                        a.callback();
+                    }
+                }
+                float last_button_x2 = ImGui::GetItemRectMax().x;
+                float next_button_x2 = last_button_x2 + style.ItemSpacing.x + button_sz.x;
+                if (i + 1 < testCmdList.size() && next_button_x2 < window_visible_x2) {
+                    ImGui::SameLine();
+                }
+            }
+            BOOST_LOG_OWL(trace_gui) << "show_test_cmd end";
+            ImGui::End();
         }
 
 
