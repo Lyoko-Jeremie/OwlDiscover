@@ -93,7 +93,7 @@ namespace OwlImGuiService {
     }
 
     void ImGuiService::start() {
-        impl = boost::make_shared<OwlImGuiServiceImpl::ImGuiServiceImpl>(ioc_, weak_from_this());
+        impl = boost::make_shared<OwlImGuiServiceImpl::ImGuiServiceImpl>(ioc_, config_, weak_from_this());
         impl->start();
     }
 

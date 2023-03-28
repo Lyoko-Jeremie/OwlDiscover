@@ -23,6 +23,7 @@ namespace OwlDiscoverState {
         boost::posix_time::ptime lastTime;
 
         boost::shared_ptr<bool> selected = boost::make_shared<bool>(false);
+        boost::shared_ptr<bool> showCamera = boost::make_shared<bool>(false);
 
         std::string programVersion;
         std::string gitRev;
@@ -32,7 +33,8 @@ namespace OwlDiscoverState {
         std::string cacheFirstTime;
         std::string cacheLastTime;
 
-        boost::shared_ptr<OwlImGuiDirectX11::ImGuiD3D11Img> imgData;
+        boost::shared_ptr<OwlImGuiDirectX11::ImGuiD3D11Img> imgDataFont = boost::make_shared<OwlImGuiDirectX11::ImGuiD3D11Img>();
+        boost::shared_ptr<OwlImGuiDirectX11::ImGuiD3D11Img> imgDataDown = boost::make_shared<OwlImGuiDirectX11::ImGuiD3D11Img>();
 
         auto operator<=>(const DiscoverStateItem &o) const {
             return ip <=> o.ip;
@@ -82,6 +84,7 @@ namespace OwlDiscoverState {
             }
             return s;
         }
+
     };
 
     struct DiscoverState : public boost::enable_shared_from_this<DiscoverState> {

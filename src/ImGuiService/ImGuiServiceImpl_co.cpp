@@ -13,7 +13,7 @@ using boost::asio::use_awaitable;
   boost::asio::use_awaitable_t(__FILE__, __LINE__, __PRETTY_FUNCTION__)
 #endif
 
-namespace OwlImGuiServiceImpl{
+namespace OwlImGuiServiceImpl {
 
     int ImGuiServiceImpl::init() {
 
@@ -231,7 +231,8 @@ namespace OwlImGuiServiceImpl{
                                 ImGui::EndMenu();
                             }
                             if (ImGui::BeginMenu("测试")) {
-                                ImGui::MenuItem("控制命令", nullptr, &show_test_cmd_window);
+                                ImGui::MenuItem("控制测试", nullptr, &show_test_cmd_window);
+//                                ImGui::MenuItem("相机测试", nullptr, &show_camera_window);
                                 ImGui::EndMenu();
                             }
                             ImGui::EndMenuBar();
@@ -342,7 +343,7 @@ namespace OwlImGuiServiceImpl{
                             if (accRc.empty()) {
                                 ImGui::Text("空列表");
                             } else {
-                                int col = 16;
+                                int col = 17;
                                 if (ImGui::BeginTable("AddrTable", col,
                                                       table_config.table_flags,
                                                       ImVec2(0, 0))) {
@@ -384,6 +385,9 @@ namespace OwlImGuiServiceImpl{
                                     ImGui::TableSetupColumn("OTAVersion", ImGuiTableColumnFlags_NoSort |
                                                                           ImGuiTableColumnFlags_WidthFixed,
                                                             0.0f);
+                                    ImGui::TableSetupColumn("相机测试", ImGuiTableColumnFlags_NoSort |
+                                                                        ImGuiTableColumnFlags_WidthFixed,
+                                                            0.0f);
                                     ImGui::TableSetupScrollFreeze(table_config.freeze_cols,
                                                                   table_config.freeze_rows);
 
@@ -391,6 +395,7 @@ namespace OwlImGuiServiceImpl{
 
                                     for (size_t i = 0; i < accRc.size(); ++i) {
                                         auto &n = accRc.at(i);
+                                        auto it = accRc.begin() + i;
                                         ImGui::TableNextRow();
                                         ImGui::TableNextColumn();
                                         ImGui::Text(boost::lexical_cast<std::string>(i).c_str());
@@ -404,29 +409,29 @@ namespace OwlImGuiServiceImpl{
                                             ImGui::SetTooltip("最近一次在线时间是%s秒前", n.nowDuration().c_str());
                                         }
                                         ImGui::TableNextColumn();
-                                        if (ImGui::SmallButton(("Land##" + n.ip).c_str())) {
+                                        if (ImGui::SmallButton(("Land##Land" + n.ip).c_str())) {
                                             do_ip(OwlMailDefine::ControlCmd::land, n.ip);
                                         }
                                         ImGui::TableNextColumn();
-                                        if (ImGui::SmallButton(("Stop##" + n.ip).c_str())) {
+                                        if (ImGui::SmallButton(("Stop##Stop" + n.ip).c_str())) {
                                             do_ip(OwlMailDefine::ControlCmd::stop, n.ip);
                                         }
                                         if (ImGui::IsItemHovered()) {
                                             ImGui::SetTooltip("紧急停桨");
                                         }
                                         ImGui::TableNextColumn();
-                                        if (ImGui::SmallButton(("Delete##" + n.ip).c_str())) {
+                                        if (ImGui::SmallButton(("Delete##Delete" + n.ip).c_str())) {
                                             deleteItem(n.ip);
                                         }
                                         if (ImGui::IsItemHovered()) {
                                             ImGui::SetTooltip("从列表中删除");
                                         }
                                         ImGui::TableNextColumn();
-                                        if (ImGui::SmallButton(("Calibrate##" + n.ip).c_str())) {
+                                        if (ImGui::SmallButton(("Calibrate##Calibrate" + n.ip).c_str())) {
                                             do_ip(OwlMailDefine::ControlCmd::calibrate, n.ip);
                                         }
                                         ImGui::TableNextColumn();
-                                        if (ImGui::SmallButton(("Ping##" + n.ip).c_str())) {
+                                        if (ImGui::SmallButton(("Ping##Ping" + n.ip).c_str())) {
                                             do_ip(OwlMailDefine::ControlCmd::ping, n.ip);
                                         }
                                         if (ImGui::IsItemHovered()) {
@@ -448,11 +453,25 @@ namespace OwlImGuiServiceImpl{
                                         ImGui::Text(n.buildTime.c_str());
                                         ImGui::TableNextColumn();
                                         if (n.versionOTA.empty()) {
-                                            if (ImGui::SmallButton(("读取OTA版本##" + n.ip).c_str())) {
+                                            if (ImGui::SmallButton(("读取OTA版本##read_ota" + n.ip).c_str())) {
                                                 sendCmdHttpReadOTA(n.ip);
                                             }
                                         } else {
                                             ImGui::Text(n.buildTime.c_str());
+                                        }
+                                        ImGui::TableNextColumn();
+                                        if (!*(n.showCamera)) {
+                                            if (ImGui::SmallButton(("相机测试##camera_test_f" + n.ip).c_str())) {
+                                                accRc.modify(it, [](OwlDiscoverState::DiscoverStateItem &nn) {
+                                                    *(nn.showCamera) = true;
+                                                });
+                                            }
+                                        } else {
+                                            if (ImGui::SmallButton(("相机测试##camera_test_t" + n.ip).c_str())) {
+                                                accRc.modify(it, [](OwlDiscoverState::DiscoverStateItem &nn) {
+                                                    *(nn.showCamera) = false;
+                                                });
+                                            }
                                         }
                                     }
                                     ImGui::EndTable();
@@ -482,6 +501,15 @@ namespace OwlImGuiServiceImpl{
                     if (ImGui::Button("关闭"))
                         show_about_window = false;
                     ImGui::End();
+                }
+
+                /*if (show_camera_window)*/ {
+                    auto &accRc = items.get<DiscoverStateItemContainerRandomAccess>();
+                    for (const auto &a: accRc) {
+                        if (*(a.showCamera)) {
+                            show_camera(a);
+                        }
+                    }
                 }
 
                 if (show_test_cmd_window) {

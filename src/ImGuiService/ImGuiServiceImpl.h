@@ -91,8 +91,12 @@ namespace OwlImGuiServiceImpl {
     public:
         ImGuiServiceImpl(
                 boost::asio::io_context &ioc,
+                boost::shared_ptr<OwlConfigLoader::ConfigLoader> config,
                 boost::weak_ptr<OwlImGuiService::ImGuiService> parentPtr
-        ) : ioc_(ioc), parentPtr_(std::move(parentPtr)) {
+        ) : ioc_(ioc),
+            config_(std::move(config)),
+            parentPtr_(std::move(parentPtr)),
+            getImageService(boost::make_shared<OwlGetImage::GetImage>(ioc_)) {
 
             std::stringstream ss;
             ss << "OwlDiscover"
@@ -109,7 +113,10 @@ namespace OwlImGuiServiceImpl {
 
     private:
         boost::asio::io_context &ioc_;
+        boost::shared_ptr<OwlConfigLoader::ConfigLoader> config_;
         boost::weak_ptr<OwlImGuiService::ImGuiService> parentPtr_;
+
+        boost::shared_ptr<OwlGetImage::GetImage> getImageService;
 
         bool isCleaned = false;
 
@@ -245,6 +252,7 @@ namespace OwlImGuiServiceImpl {
 
         void show_test_cmd();
 
+        void show_camera(const OwlDiscoverState::DiscoverStateItem &a);
 
     };
 

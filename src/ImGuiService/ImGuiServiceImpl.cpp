@@ -545,6 +545,118 @@ namespace OwlImGuiServiceImpl {
         });
     }
 
+    void ImGuiServiceImpl::show_camera(const OwlDiscoverState::DiscoverStateItem &a) {
+        ImGui::SetNextWindowSize(ImVec2(800, 400), ImGuiCond_FirstUseEver);
+        ImGui::Begin((std::string{"相机测试 "} + a.ip + std::string{"##show_camera"} + a.ip).c_str(),
+                     a.showCamera.get(), ImGuiWindowFlags_NoSavedSettings);
+
+        if (ImGui::Button((std::string{"Front##show_camera_Front"} + a.ip).c_str())) {
+            getImageService->get(
+                    a.ip,
+                    boost::lexical_cast<std::string>(config_->config().ImageServiceHttpPort),
+                    "/front",
+                    11,
+                    [
+                            this, self = shared_from_this(), a
+                    ](boost::beast::error_code ec, bool ok, cv::Mat img) {
+                        if (ec) {
+                            BOOST_LOG_OWL(warning) << "show_camera /front ec " << ec.what();
+                            return;
+                        } else {
+
+                        }
+                        auto rb = a.imgDataFont->updateTexture(img, g_pd3dDevice);
+                        if (!rb) {
+                            a.imgDataFont->cleanTexture();
+                        }
+                        img.release();
+                        BOOST_LOG_OWL(trace_gui) << "show_camera /front rb " << rb;
+//                            if (ok) {
+//                                auto d = OwlImGuiDirectX11::loadTextureFromMat(img, g_pd3dDevice);
+//                                if (d) {
+//                                    (*a.imgDataFont).operator=(std::move(*d));
+//                                }
+//                            }
+                    }
+            );
+        }
+        ImGui::SameLine();
+        if (ImGui::Button((std::string{"Down##show_camera_Down"} + a.ip).c_str())) {
+            getImageService->get(
+                    a.ip,
+                    boost::lexical_cast<std::string>(config_->config().ImageServiceHttpPort),
+                    "/down",
+                    11,
+                    [
+                            this, self = shared_from_this(), a
+                    ](boost::beast::error_code ec, bool ok, cv::Mat img) {
+                        if (ec) {
+                            BOOST_LOG_OWL(warning) << "show_camera /down ec " << ec.what();
+                            return;
+                        }
+                        auto rb = a.imgDataDown->updateTexture(img, g_pd3dDevice);
+                        if (!rb) {
+                            a.imgDataDown->cleanTexture();
+                        }
+                        img.release();
+                        BOOST_LOG_OWL(trace_gui) << "show_camera /down rb " << rb;
+//                            if (ok) {
+//                                auto d = OwlImGuiDirectX11::loadTextureFromMat(img, g_pd3dDevice);
+//                                if (d) {
+//                                    (*a.imgDataDown).operator=(std::move(*d));
+//                                }
+//                            }
+                    }
+            );
+        }
+
+        static bool use_text_color_for_tint = false;
+//            float w = ImGui::GetStyle().ItemSpacing.x / 2.f;
+//            BOOST_LOG_OWL(trace_gui) << "show_camera ImGui::GetStyle().ItemSpacing.x " << ImGui::GetStyle().ItemSpacing.x;
+//            BOOST_LOG_OWL(trace_gui) << "show_camera ImGui::GetStyle().ItemSpacing.y " << ImGui::GetStyle().ItemSpacing.y;
+//            float window_visible_x2 = ImGui::GetWindowPos().x + ImGui::GetWindowContentRegionMax().x;
+//            BOOST_LOG_OWL(trace_gui) << "show_camera ImGui::GetWindowPos().x " << ImGui::GetWindowPos().x;
+//            BOOST_LOG_OWL(trace_gui) << "show_camera ImGui::GetWindowPos().y " << ImGui::GetWindowPos().y;
+//            BOOST_LOG_OWL(trace_gui) << "show_camera ImGui::GetWindowContentRegionMax().x " << ImGui::GetWindowContentRegionMax().x;
+//            BOOST_LOG_OWL(trace_gui) << "show_camera ImGui::GetWindowContentRegionMax().y " << ImGui::GetWindowContentRegionMax().y;
+//            BOOST_LOG_OWL(trace_gui) << "show_camera window_visible_x2 " << window_visible_x2;
+        float w = ImGui::GetWindowContentRegionMax().x / 2.f - ImGui::GetStyle().ItemSpacing.y;
+        ImVec2 uv_min = ImVec2(0.0f, 0.0f);                 // Top-left
+        ImVec2 uv_max = ImVec2(1.0f, 1.0f);                 // Lower-right
+        ImVec4 tint_col = use_text_color_for_tint ?
+                          ImGui::GetStyleColorVec4(ImGuiCol_Text) :
+                          ImVec4(1.0f, 1.0f, 1.0f, 1.0f);   // No tint
+        ImVec4 border_col = ImGui::GetStyleColorVec4(ImGuiCol_Border);
+
+        ImDrawList *draw_list = ImGui::GetWindowDrawList();
+        if (a.imgDataFont->texture) {
+            ImGui::Image(&*(a.imgDataFont->texture),
+                         ImVec2{w, w / a.imgDataFont->width * a.imgDataFont->height},
+//                             ImVec2{80, 60},
+                         uv_min, uv_max, tint_col, border_col);
+        } else {
+            ImVec2 pos = ImGui::GetCursorScreenPos();
+            ImGui::PushTextWrapPos(ImGui::GetCursorPos().x + w);
+            ImGui::Text("Front Camera No Data.");
+            draw_list->AddRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax(), IM_COL32(255, 255, 0, 255));
+            ImGui::PopTextWrapPos();
+        }
+        ImGui::SameLine();
+        if (a.imgDataDown->texture) {
+            ImGui::Image(&*(a.imgDataDown->texture),
+                         ImVec2{w, w / a.imgDataDown->width * a.imgDataDown->height},
+//                             ImVec2{80, 60},
+                         uv_min, uv_max, tint_col, border_col);
+        } else {
+            ImGui::PushTextWrapPos(ImGui::GetCursorPos().x + w);
+            ImGui::Text("Down Camera No Data.");
+            draw_list->AddRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax(), IM_COL32(255, 255, 0, 255));
+            ImGui::PopTextWrapPos();
+        }
+
+        ImGui::End();
+    }
+
 
 } // OwlImGuiServiceImpl
 

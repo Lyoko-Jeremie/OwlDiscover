@@ -11,6 +11,11 @@
 
 namespace OwlImGuiDirectX11 {
 
+    struct ImGuiD3D11Img;
+
+    // img must be cv::ColorConversionCodes::COLOR_BGR2BGRA
+    boost::shared_ptr<ImGuiD3D11Img> loadTextureFromMat(cv::Mat img, ID3D11Device *g_pd3dDevice);
+
     struct ImGuiD3D11Img : public boost::enable_shared_from_this<ImGuiD3D11Img> {
 
         int width = 0;
@@ -21,7 +26,22 @@ namespace OwlImGuiDirectX11 {
         boost::posix_time::ptime time;
         std::string cacheTime;
 
-        ImGuiD3D11Img() = delete;
+        ImGuiD3D11Img() {
+            time = boost::posix_time::microsec_clock::local_time();
+            cacheTime = getTimeString(time);
+        }
+
+        ImGuiD3D11Img(const ImGuiD3D11Img &o) = default;
+
+        ImGuiD3D11Img(ImGuiD3D11Img &&o) noexcept {
+            width = o.width;
+            o.width = 0;
+            height = o.height;
+            o.height = 0;
+            time = o.time;
+            cacheTime = std::move(o.cacheTime);
+            texture = std::move(o.texture);
+        }
 
         ImGuiD3D11Img(
                 int width_,
@@ -32,6 +52,14 @@ namespace OwlImGuiDirectX11 {
             cacheTime = getTimeString(time);
         }
 
+        ImGuiD3D11Img &operator=(ImGuiD3D11Img &&o) = default;
+
+        ImGuiD3D11Img &operator=(const ImGuiD3D11Img &o) = default;
+
+        void reset(ImGuiD3D11Img &&o) {
+            this->operator=(std::move(o));
+        }
+
         [[nodiscard]] static std::string getTimeString(boost::posix_time::ptime t) {
             auto s = boost::posix_time::to_iso_extended_string(t);
             if (s.size() > 10) {
@@ -40,12 +68,31 @@ namespace OwlImGuiDirectX11 {
             return s;
         }
 
-    };
+        bool isEmpty() const {
+            return texture.operator bool();
+        }
 
-    // img must be cv::ColorConversionCodes::COLOR_BGR2BGRA
-    boost::shared_ptr<ImGuiD3D11Img> loadTextureFromMat(
-            const cv::Mat &img,
-            ID3D11Device *g_pd3dDevice);
+        void updateTime() {
+            time = boost::posix_time::microsec_clock::local_time();
+            cacheTime = getTimeString(time);
+        }
+
+        bool updateTexture(cv::Mat img, ID3D11Device *g_pd3dDevice) {
+            auto p = loadTextureFromMat(img, g_pd3dDevice);
+            if (p) {
+                this->operator=(std::move(*p));
+                return true;
+            } else {
+                return false;
+            }
+        }
+
+        bool cleanTexture() {
+            this->operator=(std::move(ImGuiD3D11Img{}));
+            return true;
+        }
+
+    };
 
 } // OwlImGuiDirectX11
 

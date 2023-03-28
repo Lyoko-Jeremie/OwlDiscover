@@ -11,11 +11,18 @@ namespace OwlImGuiDirectX11 {
 
     // img must be cv::ColorConversionCodes::COLOR_BGR2BGRA
     boost::shared_ptr<ImGuiD3D11Img> loadTextureFromMat(
-            const cv::Mat &img,
+            cv::Mat img,
             ID3D11Device *g_pd3dDevice) {
         // Load from disk into a raw RGBA buffer
         if (img.empty())
             return {};
+
+        if (img.channels() == 3) {
+            cv::cvtColor(img, img, cv::ColorConversionCodes::COLOR_BGR2RGBA);
+        }
+        if (img.channels() == 1) {
+            cv::cvtColor(img, img, cv::ColorConversionCodes::COLOR_GRAY2RGBA);
+        }
 
         // Create texture
         D3D11_TEXTURE2D_DESC desc;
@@ -53,13 +60,13 @@ namespace OwlImGuiDirectX11 {
         }
 
         boost::shared_ptr<ID3D11ShaderResourceView> texturePtr{
-                nullptr, [](ID3D11ShaderResourceView *ptr) {
+                texture, [](ID3D11ShaderResourceView *ptr) {
                     ptr->Release();
                 }
         };
 
 //        std::unique_ptr<ID3D11ShaderResourceView, void (*)(ID3D11ShaderResourceView *)> texturePtr{
-//                nullptr, [](ID3D11ShaderResourceView *ptr) {
+//                texture, [](ID3D11ShaderResourceView *ptr) {
 //                    ptr->Release();
 //                }
 //        };
