@@ -25,6 +25,8 @@ namespace OwlMailDefine {
         forward,
         back,
 
+        keep,
+
         flyMode,
 
         calibrate,

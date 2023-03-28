@@ -1155,7 +1155,7 @@ namespace OwlImGuiService {
         std::array<int, 3> goto_pos{0, 0, 0};
 
         void show_test_cmd() {
-            ImGui::Begin("测试控制", &show_test_cmd_window);
+            ImGui::Begin("控制测试", &show_test_cmd_window);
 
             ImVec2 button_sz(60, 30);
 

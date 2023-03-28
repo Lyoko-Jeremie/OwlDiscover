@@ -171,8 +171,18 @@ namespace OwlControlService {
             if (data->controlCmdData) {
                 switch (data->controlCmdData->cmd) {
                     case OwlMailDefine::ControlCmd::ping:
-                    case OwlMailDefine::ControlCmd::land:
                     case OwlMailDefine::ControlCmd::stop:
+                    case OwlMailDefine::ControlCmd::keep:
+                    case OwlMailDefine::ControlCmd::land:
+                    case OwlMailDefine::ControlCmd::takeoff:
+                    case OwlMailDefine::ControlCmd::cw:
+                    case OwlMailDefine::ControlCmd::ccw:
+                    case OwlMailDefine::ControlCmd::up:
+                    case OwlMailDefine::ControlCmd::down:
+                    case OwlMailDefine::ControlCmd::left:
+                    case OwlMailDefine::ControlCmd::right:
+                    case OwlMailDefine::ControlCmd::forward:
+                    case OwlMailDefine::ControlCmd::back:
                     case OwlMailDefine::ControlCmd::calibrate:
                     case OwlMailDefine::ControlCmd::query:
                         sendCmd(data->controlCmdData);
@@ -228,13 +238,6 @@ namespace OwlControlService {
                         {"clientId",  OwlLog::globalClientId},
                 }));
                 break;
-            case OwlMailDefine::ControlCmd::land:
-                S = boost::make_shared<std::string>(boost::json::serialize(boost::json::value{
-                        {"cmdId",     static_cast<int>(OwlCmd::OwlCmdEnum::land)},
-                        {"packageId", ++id_},
-                        {"clientId",  OwlLog::globalClientId},
-                }));
-                break;
             case OwlMailDefine::ControlCmd::stop:
                 S = boost::make_shared<std::string>(boost::json::serialize(boost::json::value{
                         {"cmdId",     static_cast<int>(OwlCmd::OwlCmdEnum::emergencyStop)},
@@ -245,6 +248,100 @@ namespace OwlControlService {
             case OwlMailDefine::ControlCmd::calibrate:
                 S = boost::make_shared<std::string>(boost::json::serialize(boost::json::value{
                         {"cmdId",     static_cast<int>(OwlCmd::OwlCmdEnum::calibrate)},
+                        {"packageId", ++id_},
+                        {"clientId",  OwlLog::globalClientId},
+                }));
+                break;
+            case OwlMailDefine::ControlCmd::keep:
+                S = boost::make_shared<std::string>(boost::json::serialize(boost::json::value{
+                        {"cmdId",     static_cast<int>(OwlCmd::OwlCmdEnum::keep)},
+                        {"packageId", ++id_},
+                        {"clientId",  OwlLog::globalClientId},
+                }));
+                break;
+            case OwlMailDefine::ControlCmd::land:
+                S = boost::make_shared<std::string>(boost::json::serialize(boost::json::value{
+                        {"cmdId",     static_cast<int>(OwlCmd::OwlCmdEnum::land)},
+                        {"packageId", ++id_},
+                        {"clientId",  OwlLog::globalClientId},
+                }));
+                break;
+            case OwlMailDefine::ControlCmd::takeoff:
+                S = boost::make_shared<std::string>(boost::json::serialize(boost::json::value{
+                        {"cmdId",     static_cast<int>(OwlCmd::OwlCmdEnum::takeoff)},
+                        {"distance",  50},
+                        {"packageId", ++id_},
+                        {"clientId",  OwlLog::globalClientId},
+                }));
+                break;
+            case OwlMailDefine::ControlCmd::cw:
+                S = boost::make_shared<std::string>(boost::json::serialize(boost::json::value{
+                        {"cmdId",     static_cast<int>(OwlCmd::OwlCmdEnum::rotate)},
+                        {"rotate",    static_cast<int>(OwlCmd::OwlCmdRotateEnum::cw)},
+                        {"rote",      45},
+                        {"packageId", ++id_},
+                        {"clientId",  OwlLog::globalClientId},
+                }));
+                break;
+            case OwlMailDefine::ControlCmd::ccw:
+                S = boost::make_shared<std::string>(boost::json::serialize(boost::json::value{
+                        {"cmdId",     static_cast<int>(OwlCmd::OwlCmdEnum::rotate)},
+                        {"rotate",    static_cast<int>(OwlCmd::OwlCmdRotateEnum::ccw)},
+                        {"rote",      45},
+                        {"packageId", ++id_},
+                        {"clientId",  OwlLog::globalClientId},
+                }));
+                break;
+            case OwlMailDefine::ControlCmd::up:
+                S = boost::make_shared<std::string>(boost::json::serialize(boost::json::value{
+                        {"cmdId",     static_cast<int>(OwlCmd::OwlCmdEnum::move)},
+                        {"forward",   static_cast<int>(OwlCmd::OwlCmdMoveEnum::up)},
+                        {"distance",  50},
+                        {"packageId", ++id_},
+                        {"clientId",  OwlLog::globalClientId},
+                }));
+                break;
+            case OwlMailDefine::ControlCmd::down:
+                S = boost::make_shared<std::string>(boost::json::serialize(boost::json::value{
+                        {"cmdId",     static_cast<int>(OwlCmd::OwlCmdEnum::move)},
+                        {"forward",   static_cast<int>(OwlCmd::OwlCmdMoveEnum::down)},
+                        {"distance",  50},
+                        {"packageId", ++id_},
+                        {"clientId",  OwlLog::globalClientId},
+                }));
+                break;
+            case OwlMailDefine::ControlCmd::left:
+                S = boost::make_shared<std::string>(boost::json::serialize(boost::json::value{
+                        {"cmdId",     static_cast<int>(OwlCmd::OwlCmdEnum::move)},
+                        {"forward",   static_cast<int>(OwlCmd::OwlCmdMoveEnum::left)},
+                        {"distance",  50},
+                        {"packageId", ++id_},
+                        {"clientId",  OwlLog::globalClientId},
+                }));
+                break;
+            case OwlMailDefine::ControlCmd::right:
+                S = boost::make_shared<std::string>(boost::json::serialize(boost::json::value{
+                        {"cmdId",     static_cast<int>(OwlCmd::OwlCmdEnum::move)},
+                        {"forward",   static_cast<int>(OwlCmd::OwlCmdMoveEnum::right)},
+                        {"distance",  50},
+                        {"packageId", ++id_},
+                        {"clientId",  OwlLog::globalClientId},
+                }));
+                break;
+            case OwlMailDefine::ControlCmd::forward:
+                S = boost::make_shared<std::string>(boost::json::serialize(boost::json::value{
+                        {"cmdId",     static_cast<int>(OwlCmd::OwlCmdEnum::move)},
+                        {"forward",   static_cast<int>(OwlCmd::OwlCmdMoveEnum::forward)},
+                        {"distance",  50},
+                        {"packageId", ++id_},
+                        {"clientId",  OwlLog::globalClientId},
+                }));
+                break;
+            case OwlMailDefine::ControlCmd::back:
+                S = boost::make_shared<std::string>(boost::json::serialize(boost::json::value{
+                        {"cmdId",     static_cast<int>(OwlCmd::OwlCmdEnum::move)},
+                        {"forward",   static_cast<int>(OwlCmd::OwlCmdMoveEnum::back)},
+                        {"distance",  50},
                         {"packageId", ++id_},
                         {"clientId",  OwlLog::globalClientId},
                 }));
