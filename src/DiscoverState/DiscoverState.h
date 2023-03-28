@@ -6,6 +6,7 @@
 #include <string>
 #include <deque>
 #include <utility>
+#include <memory>
 #include "../MemoryBoost.h"
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/lexical_cast.hpp>
@@ -20,7 +21,7 @@ namespace OwlDiscoverState {
         boost::posix_time::ptime firstTime;
         boost::posix_time::ptime lastTime;
 
-        bool selected = false;
+        boost::shared_ptr<bool> selected = boost::make_shared<bool>(false);
 
         std::string programVersion;
         std::string gitRev;

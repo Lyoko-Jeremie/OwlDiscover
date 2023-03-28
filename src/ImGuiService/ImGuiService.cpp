@@ -1149,6 +1149,7 @@ namespace OwlImGuiService {
 
             for (size_t i = 0; i != testCmdList.size(); ++i) {
                 auto a = testCmdList.at(i);
+//                ImGui::ImVec2 label_size = ImGui::CalcTextSize(a.name.c_str(), NULL, true);
                 if (ImGui::Button(a.name.c_str(), button_sz)) {
                     if (a.callback) {
                         a.callback();
@@ -1166,22 +1167,13 @@ namespace OwlImGuiService {
                                   ImGuiTableFlags_Resizable | ImGuiTableFlags_NoSavedSettings |
                                   ImGuiTableFlags_Borders)) {
                 auto &accRc = items.get<DiscoverStateItemContainerRandomAccess>();
-                for (int i = 0; i < accRc.size(); i++) {
-                    auto it = accRc.begin();
+                for (const auto &a: accRc) {
                     ImGui::TableNextRow();
                     ImGui::TableNextColumn();
-                    bool isSelected = ImGui::Selectable(
-                            it->ip.c_str(),
-                            it->selected,
-                            ImGuiSelectableFlags_SpanAllColumns);
-                    if (isSelected != it->selected) {
-                    }
-                    // TODO
-                    accRc.modify(it, [isSelected](auto &a) {
-                        a.selected = isSelected;
-                    });
+                    ImGui::Selectable(a.ip.c_str(), a.selected.get(),
+                                      ImGuiSelectableFlags_SpanAllColumns);
                     ImGui::TableNextColumn();
-                    ImGui::Text(boost::lexical_cast<std::string>(it->port).c_str());
+                    ImGui::Text(boost::lexical_cast<std::string>(a.port).c_str());
                 }
                 ImGui::EndTable();
             }
