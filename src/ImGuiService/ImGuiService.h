@@ -16,11 +16,15 @@
 #include "../ControlService/ControlServiceUdpMailBox.h"
 #include "../ControlService/ControlServiceHttpMailBox.h"
 
+namespace OwlImGuiServiceImpl {
+
+    struct ImGuiServiceImpl;
+
+}
+
 namespace OwlImGuiService {
 
     void safe_exit();
-
-    struct ImGuiServiceImpl;
 
     class ImGuiService : public boost::enable_shared_from_this<ImGuiService> {
     public:
@@ -48,7 +52,7 @@ namespace OwlImGuiService {
         OwlMailDefine::ControlUdpMailBox mailbox_udp_;
         OwlMailDefine::ControlHttpMailBox mailbox_http_;
 
-        boost::shared_ptr<ImGuiServiceImpl> impl;
+        boost::shared_ptr<OwlImGuiServiceImpl::ImGuiServiceImpl> impl;
 
         boost::json::parse_options json_parse_options_;
 

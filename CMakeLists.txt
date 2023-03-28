@@ -326,6 +326,9 @@ add_executable(${ProjectMainName}
         src/ImGuiService/ImGuiDirectX11.h
         src/GetImage/GetImage.cpp
         src/GetImage/GetImage.h
+        src/ImGuiService/ImGuiServiceImpl.cpp
+        src/ImGuiService/ImGuiServiceImpl_co.cpp
+        src/ImGuiService/ImGuiServiceImpl.h
         )
 
 # ============================================================================================

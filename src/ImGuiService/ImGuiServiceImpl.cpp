@@ -1,0 +1,551 @@
+// jeremie
+
+#include "ImGuiServiceImpl.h"
+#include "./ImGuiService.h"
+
+namespace OwlImGuiServiceImpl {
+
+    std::string operator "" _S(const char8_t *str, std::size_t) {
+        return reinterpret_cast< const char * >(str);
+    }
+
+    char const *operator "" _C(const char8_t *str, std::size_t) {
+        return reinterpret_cast< const char * >(str);
+    }
+
+
+    bool ImGuiServiceImpl::CreateDeviceD3D(HWND hWnd) {
+        // Setup swap chain
+        DXGI_SWAP_CHAIN_DESC sd;
+        ZeroMemory(&sd, sizeof(sd));
+        sd.BufferCount = 2;
+        sd.BufferDesc.Width = 0;
+        sd.BufferDesc.Height = 0;
+        sd.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+        sd.BufferDesc.RefreshRate.Numerator = 60;
+        sd.BufferDesc.RefreshRate.Denominator = 1;
+        sd.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
+        sd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+        sd.OutputWindow = hWnd;
+        sd.SampleDesc.Count = 1;
+        sd.SampleDesc.Quality = 0;
+        sd.Windowed = TRUE;
+        sd.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
+
+        UINT createDeviceFlags = 0;
+        //createDeviceFlags |= D3D11_CREATE_DEVICE_DEBUG;
+        D3D_FEATURE_LEVEL featureLevel;
+        const D3D_FEATURE_LEVEL featureLevelArray[2] = {D3D_FEATURE_LEVEL_11_0, D3D_FEATURE_LEVEL_10_0,};
+        if (D3D11CreateDeviceAndSwapChain(
+                nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, createDeviceFlags,
+                featureLevelArray, 2,
+                D3D11_SDK_VERSION,
+                &sd, &g_pSwapChain, &g_pd3dDevice,
+                &featureLevel,
+                &g_pd3dDeviceContext) != S_OK) {
+            return false;
+        }
+
+        CreateRenderTarget();
+        return true;
+    }
+
+    void ImGuiServiceImpl::CleanupDeviceD3D() {
+        CleanupRenderTarget();
+        if (g_pSwapChain) {
+            g_pSwapChain->Release();
+            g_pSwapChain = nullptr;
+        }
+        if (g_pd3dDeviceContext) {
+            g_pd3dDeviceContext->Release();
+            g_pd3dDeviceContext = nullptr;
+        }
+        if (g_pd3dDevice) {
+            g_pd3dDevice->Release();
+            g_pd3dDevice = nullptr;
+        }
+    }
+
+    void ImGuiServiceImpl::CreateRenderTarget() {
+        ID3D11Texture2D *pBackBuffer;
+        g_pSwapChain->GetBuffer(0, IID_PPV_ARGS(&pBackBuffer));
+        g_pd3dDevice->CreateRenderTargetView(pBackBuffer, nullptr, &g_mainRenderTargetView);
+        pBackBuffer->Release();
+    }
+
+    void ImGuiServiceImpl::CleanupRenderTarget() {
+        if (g_mainRenderTargetView) {
+            g_mainRenderTargetView->Release();
+            g_mainRenderTargetView = nullptr;
+        }
+    }
+
+    void ImGuiServiceImpl::clear() {
+
+        if (!isCleaned) {
+            isCleaned = true;
+
+            // Cleanup
+            ImGui_ImplDX11_Shutdown();
+            ImGui_ImplSDL2_Shutdown();
+            ImGui::DestroyContext();
+
+            CleanupDeviceD3D();
+            SDL_DestroyWindow(window);
+            window = nullptr;
+            SDL_Quit();
+        }
+
+
+    }
+
+    void ImGuiServiceImpl::update_state(const boost::shared_ptr<OwlDiscoverState::DiscoverStateItem> &a) {
+        BOOST_ASSERT(a);
+        BOOST_ASSERT(!weak_from_this().expired());
+
+        boost::asio::dispatch(ioc_, [this, a, self = shared_from_this()]() {
+            BOOST_ASSERT(a);
+            BOOST_ASSERT(self);
+
+            auto &accIp = items.get<OwlDiscoverState::DiscoverStateItem::IP>();
+            auto accIpEnd = accIp.end();
+            BOOST_LOG_OWL(trace_gui) << "ImGuiServiceImpl::new_state DiscoverStateItem a " << a->ip;
+
+            auto it = accIp.find(a->ip);
+            if (it != accIpEnd) {
+                // update
+                accIp.modify(it, [&a](OwlDiscoverState::DiscoverStateItem &n) {
+                    n.lastTime = a->lastTime;
+                    n.port = a->port;
+                    if (!a->programVersion.empty()) {
+                        n.programVersion = a->programVersion;
+                    }
+                    if (!a->gitRev.empty()) {
+                        n.gitRev = a->gitRev;
+                    }
+                    if (!a->buildTime.empty()) {
+                        n.buildTime = a->buildTime;
+                    }
+                    n.updateCache();
+                });
+            } else {
+                // insert
+                // ignore
+            }
+
+            // re short it
+            sortItem();
+
+        });
+    }
+
+    void ImGuiServiceImpl::update_ota(std::string ip, std::string version) {
+
+        boost::asio::dispatch(ioc_, [this, ip, version, self = shared_from_this()]() {
+            BOOST_ASSERT(self);
+
+            auto &accIp = items.get<OwlDiscoverState::DiscoverStateItem::IP>();
+            auto accIpEnd = accIp.end();
+            BOOST_LOG_OWL(trace_gui) << "ImGuiServiceImpl::update_ota " << ip << " " << version;
+
+            auto it = accIp.find(ip);
+            if (it != accIpEnd) {
+                // update
+                accIp.modify(it, [&ip, &version](OwlDiscoverState::DiscoverStateItem &n) {
+                    boost::ignore_unused(ip);
+                    if (!version.empty()) {
+                        n.versionOTA = version;
+                    }
+                    n.updateCache();
+                });
+            } else {
+                // insert
+                // ignore
+            }
+
+            // re short it
+            // sortItem();
+
+        });
+    }
+
+    void ImGuiServiceImpl::new_state(const boost::shared_ptr<OwlDiscoverState::DiscoverStateItem> &a) {
+        BOOST_ASSERT(a);
+        BOOST_ASSERT(!weak_from_this().expired());
+
+        boost::asio::dispatch(ioc_, [this, a, self = shared_from_this()]() {
+            BOOST_ASSERT(a);
+            BOOST_ASSERT(self);
+
+            auto &accIp = items.get<OwlDiscoverState::DiscoverStateItem::IP>();
+            auto accIpEnd = accIp.end();
+            BOOST_LOG_OWL(trace_gui) << "ImGuiServiceImpl::new_state DiscoverStateItem a " << a->ip;
+
+            auto it = accIp.find(a->ip);
+            if (it != accIpEnd) {
+                // update
+                accIp.modify(it, [&a](OwlDiscoverState::DiscoverStateItem &n) {
+                    n.lastTime = a->lastTime;
+                    n.port = a->port;
+                    if (!a->programVersion.empty()) {
+                        n.programVersion = a->programVersion;
+                    }
+                    if (!a->gitRev.empty()) {
+                        n.gitRev = a->gitRev;
+                    }
+                    if (!a->buildTime.empty()) {
+                        n.buildTime = a->buildTime;
+                    }
+                    n.updateCache();
+                });
+            } else {
+                // insert
+                auto b = *a;
+                b.updateCache();
+                items.emplace_back(b);
+            }
+
+            // re short it
+            sortItem();
+
+        });
+
+    }
+
+    void ImGuiServiceImpl::new_state(const boost::shared_ptr<OwlDiscoverState::DiscoverState> &s) {
+        BOOST_ASSERT(s);
+        BOOST_ASSERT(!weak_from_this().expired());
+
+        boost::asio::dispatch(ioc_, [this, s, self = shared_from_this()]() {
+            BOOST_ASSERT(s);
+            BOOST_ASSERT(self);
+
+            auto &accIp = items.get<OwlDiscoverState::DiscoverStateItem::IP>();
+            auto accIpEnd = accIp.end();
+            for (const auto &a: s->items) {
+                BOOST_LOG_OWL(trace_gui) << "ImGuiServiceImpl::new_state DiscoverState a " << a.ip;
+
+                auto it = accIp.find(a.ip);
+                if (it != accIpEnd) {
+                    // update
+                    accIp.modify(it, [&a](OwlDiscoverState::DiscoverStateItem &n) {
+                        n.lastTime = a.lastTime;
+                        n.port = a.port;
+                        if (!a.programVersion.empty()) {
+                            n.programVersion = a.programVersion;
+                        }
+                        if (!a.gitRev.empty()) {
+                            n.gitRev = a.gitRev;
+                        }
+                        if (!a.buildTime.empty()) {
+                            n.buildTime = a.buildTime;
+                        }
+                        n.updateCache();
+                    });
+                } else {
+                    // insert
+                    auto b = a;
+                    b.updateCache();
+                    items.emplace_back(b);
+                }
+            }
+
+            // re short it
+            sortItem();
+
+        });
+
+    }
+
+    void ImGuiServiceImpl::sendCmdHttpReadAllOTA() {
+        auto p = parentPtr_.lock();
+        if (p) {
+            auto &accIp = items.get<OwlDiscoverState::DiscoverStateItem::IP>();
+            auto accIpEnd = accIp.end();
+            for (auto it = accIp.begin(); it != accIpEnd; ++it) {
+                p->sendCmdHttpReadOTA(it->ip);
+            }
+        }
+    }
+
+    void ImGuiServiceImpl::sendCmdHttpReadOTA(std::string ip) {
+        auto p = parentPtr_.lock();
+        if (p) {
+            p->sendCmdHttpReadOTA(std::move(ip));
+        }
+    }
+
+    void ImGuiServiceImpl::scanSubnet() {
+        auto p = parentPtr_.lock();
+        if (p) {
+            p->scanSubnet();
+        }
+    }
+
+    void ImGuiServiceImpl::scanSubnetPingHttp() {
+        auto p = parentPtr_.lock();
+        if (p) {
+            p->scanSubnetPingHttp();
+        }
+    }
+
+    void ImGuiServiceImpl::scanSubnetPingUdp() {
+        auto p = parentPtr_.lock();
+        if (p) {
+            p->scanSubnetPingUdp();
+        }
+    }
+
+    void ImGuiServiceImpl::do_all(OwlMailDefine::ControlCmd cmd) {
+        auto p = parentPtr_.lock();
+        if (p) {
+            if (cmdType == static_cast<int>(CmdType::Udp)
+                || cmd == OwlMailDefine::ControlCmd::query) {
+                auto &accIp = items.get<OwlDiscoverState::DiscoverStateItem::IP>();
+                auto accIpEnd = accIp.end();
+                for (auto it = accIp.begin(); it != accIpEnd; ++it) {
+                    auto m = boost::make_shared<OwlMailDefine::ControlCmdData>();
+                    m->cmd = cmd;
+                    m->ip = it->ip;
+                    p->sendCmdUdp(std::move(m));
+                }
+                return;
+            } else if (cmdType == static_cast<int>(CmdType::Http)) {
+                auto &accIp = items.get<OwlDiscoverState::DiscoverStateItem::IP>();
+                auto accIpEnd = accIp.end();
+                for (auto it = accIp.begin(); it != accIpEnd; ++it) {
+                    auto m = boost::make_shared<OwlMailDefine::ControlCmdData>();
+                    m->cmd = cmd;
+                    m->ip = it->ip;
+                    p->sendCmdHttp(std::move(m));
+                }
+                return;
+            } else {
+                BOOST_LOG_OWL(error) << "ImGuiServiceImpl do_all never go there.";
+                return;
+            }
+        }
+    }
+
+    void ImGuiServiceImpl::do_ip(OwlMailDefine::ControlCmd cmd, std::string ip) {
+        auto p = parentPtr_.lock();
+        if (p) {
+            if (cmdType == static_cast<int>(CmdType::Udp)
+                || cmd == OwlMailDefine::ControlCmd::query) {
+                auto m = boost::make_shared<OwlMailDefine::ControlCmdData>();
+                m->cmd = cmd;
+                m->ip = std::move(ip);
+                p->sendCmdUdp(std::move(m));
+                return;
+            } else if (cmdType == static_cast<int>(CmdType::Http)) {
+                auto m = boost::make_shared<OwlMailDefine::ControlCmdData>();
+                m->cmd = cmd;
+                m->ip = std::move(ip);
+                p->sendCmdHttp(std::move(m));
+                return;
+            } else {
+                BOOST_LOG_OWL(error) << "ImGuiServiceImpl do_ip never go there.";
+                return;
+            }
+        }
+    }
+
+    void ImGuiServiceImpl::sortItem() {
+        sortItemByDuration30();
+    }
+
+    void ImGuiServiceImpl::sortItemByDuration30() {
+        auto now = OwlDiscoverState::DiscoverStateItem::now();
+        auto &accIp = items.get<DiscoverStateItemContainerRandomAccess>();
+        accIp.sort([&now](
+                const OwlDiscoverState::DiscoverStateItem &a,
+                const OwlDiscoverState::DiscoverStateItem &b
+        ) {
+            auto at = a.calcDurationSecond(now);
+            auto bt = b.calcDurationSecond(now);
+            if (at == bt) {
+                return a.ip < b.ip;
+            }
+            if (at > 30 && bt > 30) {
+                return a.ip < b.ip;
+            }
+            if (at <= 30 && bt <= 30) {
+                return a.ip < b.ip;
+            }
+            if (at <= 30 && bt > 30) {
+                return true;
+            }
+            if (at > 30 && bt <= 30) {
+                return false;
+            }
+            return false;
+        });
+    }
+
+    void ImGuiServiceImpl::sortItemByDuration() {
+        auto now = OwlDiscoverState::DiscoverStateItem::now();
+        auto &accIp = items.get<DiscoverStateItemContainerRandomAccess>();
+        accIp.sort([&now](
+                const OwlDiscoverState::DiscoverStateItem &a,
+                const OwlDiscoverState::DiscoverStateItem &b
+        ) {
+            auto at = a.calcDurationSecond(now);
+            auto bt = b.calcDurationSecond(now);
+            if (at < bt) {
+                return true;
+            }
+            if (at == bt) {
+                return a.ip < b.ip;
+            }
+            return false;
+        });
+    }
+
+    void ImGuiServiceImpl::deleteItem(const std::string &s) {
+        BOOST_LOG_OWL(trace_gui) << "deleteItem " << s;
+        auto &accIp = items.get<OwlDiscoverState::DiscoverStateItem::IP>();
+        auto n = accIp.erase(s);
+        BOOST_LOG_OWL(trace_gui) << "deleteItem " << n;
+    }
+
+    void ImGuiServiceImpl::cleanItem() {
+        items.clear();
+    }
+
+    void ImGuiServiceImpl::HelpMarker(const char *desc) {
+        ImGui::TextDisabled("(?)");
+        if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort) && ImGui::BeginTooltip()) {
+            ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+            ImGui::TextUnformatted(desc);
+            ImGui::PopTextWrapPos();
+            ImGui::EndTooltip();
+        }
+    }
+
+    void ImGuiServiceImpl::test_cmd_do_all(OwlMailDefine::ControlCmd cmd) {
+        auto &accRc = items.get<DiscoverStateItemContainerRandomAccess>();
+        for (const auto &a: accRc) {
+            if (*a.selected) {
+                do_ip(cmd, a.ip);
+            }
+        }
+    }
+
+    void ImGuiServiceImpl::init_test_cmd_data() {
+        testCmdList.emplace_back("起飞##cmd_takeoff", [this]() {
+            test_cmd_do_all(OwlMailDefine::ControlCmd::takeoff);
+        });
+        testCmdList.emplace_back("降落##cmd_land", [this]() {
+            test_cmd_do_all(OwlMailDefine::ControlCmd::land);
+        });
+        testCmdList.emplace_back("校准##cmd_calibrate", [this]() {
+            test_cmd_do_all(OwlMailDefine::ControlCmd::calibrate);
+        });
+        testCmdList.emplace_back("前##cmd_forward", [this]() {
+            test_cmd_do_all(OwlMailDefine::ControlCmd::forward);
+        });
+        testCmdList.emplace_back("后##cmd_back", [this]() {
+            test_cmd_do_all(OwlMailDefine::ControlCmd::back);
+        });
+        testCmdList.emplace_back("左##cmd_left", [this]() {
+            test_cmd_do_all(OwlMailDefine::ControlCmd::left);
+        });
+        testCmdList.emplace_back("右##cmd_right", [this]() {
+            test_cmd_do_all(OwlMailDefine::ControlCmd::right);
+        });
+        testCmdList.emplace_back("上##cmd_up", [this]() {
+            test_cmd_do_all(OwlMailDefine::ControlCmd::up);
+        });
+        testCmdList.emplace_back("下##cmd_down", [this]() {
+            test_cmd_do_all(OwlMailDefine::ControlCmd::down);
+        });
+        testCmdList.emplace_back("顺##cmd_cw", [this]() {
+            test_cmd_do_all(OwlMailDefine::ControlCmd::cw);
+        });
+        testCmdList.emplace_back("逆##cmd_ccw", [this]() {
+            test_cmd_do_all(OwlMailDefine::ControlCmd::ccw);
+        });
+    }
+
+    void ImGuiServiceImpl::show_test_cmd() {
+        ImGui::Begin("控制测试", &show_test_cmd_window);
+
+        ImVec2 button_sz(60, 30);
+
+//            ImGui::InputInt3("##cmd_Goto_inpot", goto_pos.data());
+//            ImGui::SameLine();
+//            if (ImGui::Button("Goto##cmd_Goto", button_sz)) {
+//                // TODO
+//                auto &accRc = items.get<DiscoverStateItemContainerRandomAccess>();
+//                for (const auto &a: accRc) {
+//
+//                }
+//            }
+
+//            ImGui::InputInt3("##cmd_mode_inpot", goto_pos.data());
+//            ImGui::SameLine();
+//            if (ImGui::Button("FlyMode##cmd_mode", button_sz)) {
+//                // TODO
+//                auto &accRc = items.get<DiscoverStateItemContainerRandomAccess>();
+//                for (const auto &a: accRc) {
+//
+//                }
+//            }
+
+
+        ImGuiStyle &style = ImGui::GetStyle();
+        float window_visible_x2 = ImGui::GetWindowPos().x + ImGui::GetWindowContentRegionMax().x;
+
+        for (size_t i = 0; i != testCmdList.size(); ++i) {
+            auto a = testCmdList.at(i);
+//                ImGui::ImVec2 label_size = ImGui::CalcTextSize(a.name.c_str(), NULL, true);
+            if (ImGui::Button(a.name.c_str(), button_sz)) {
+                if (a.callback) {
+                    a.callback();
+                }
+            }
+            float last_button_x2 = ImGui::GetItemRectMax().x;
+            float next_button_x2 = last_button_x2 + style.ItemSpacing.x + button_sz.x;
+            if (i + 1 < testCmdList.size() && next_button_x2 < window_visible_x2) {
+                ImGui::SameLine();
+            }
+        }
+
+
+        if (ImGui::BeginTable("CmdSelectTable", 2,
+                              ImGuiTableFlags_Resizable | ImGuiTableFlags_NoSavedSettings |
+                              ImGuiTableFlags_Borders)) {
+            auto &accRc = items.get<DiscoverStateItemContainerRandomAccess>();
+            for (const auto &a: accRc) {
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+                ImGui::Selectable(a.ip.c_str(), a.selected.get(),
+                                  ImGuiSelectableFlags_SpanAllColumns);
+                ImGui::TableNextColumn();
+                ImGui::Text(boost::lexical_cast<std::string>(a.port).c_str());
+            }
+            ImGui::EndTable();
+        }
+
+
+        ImGui::End();
+    }
+
+    void ImGuiServiceImpl::start() {
+        boost::asio::post(ioc_, [
+                this, self = shared_from_this()
+        ]() {
+            auto r = init();
+            if (r != 0) {
+                BOOST_LOG_OWL(error) << "ImGuiServiceImpl init error " << r;
+                clear();
+                OwlImGuiService::safe_exit();
+                return;
+            }
+        });
+    }
+
+
+} // OwlImGuiServiceImpl
+
+
