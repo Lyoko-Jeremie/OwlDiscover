@@ -18,7 +18,9 @@ set(CMAKE_CXX_STANDARD 20)
 # ============================================================================================
 
 #set(DEBUG_log_multicast ON)
+#set(trace_http ON)
 #set(DEBUG_Mailbox ON)
+#set(DEBUG_log_gui ON)
 
 # ============================================================================================
 
@@ -42,6 +44,9 @@ endif (DEBUG_log_TAG)
 if (DEBUG_log_cmd_HTTP)
     add_definitions(-DDEBUG_log_cmd_HTTP)
 endif (DEBUG_log_cmd_HTTP)
+if (DEBUG_log_cmd_HTTP_error)
+    add_definitions(-DDEBUG_log_cmd_HTTP_error)
+endif (DEBUG_log_cmd_HTTP_error)
 if (DEBUG_log_SerialPortWrite)
     add_definitions(-DDEBUG_log_SerialPortWrite)
 endif (DEBUG_log_SerialPortWrite)
