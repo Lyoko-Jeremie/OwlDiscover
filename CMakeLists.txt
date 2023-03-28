@@ -323,7 +323,10 @@ add_executable(${ProjectMainName}
         src/ControlService/ControlServiceHttpMailBox.h
         src/ControlService/OwlCmd.h
         src/ImGuiService/ImGuiDirectX11.cpp
-        src/ImGuiService/ImGuiDirectX11.h)
+        src/ImGuiService/ImGuiDirectX11.h
+        src/GetImage/GetImage.cpp
+        src/GetImage/GetImage.h
+        )
 
 # ============================================================================================
 
