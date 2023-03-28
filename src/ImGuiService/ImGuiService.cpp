@@ -1107,30 +1107,49 @@ namespace OwlImGuiService {
 
         std::vector<TestCmdItem> testCmdList;
 
+        void test_cmd_do_all(OwlMailDefine::ControlCmd cmd) {
+            auto &accRc = items.get<DiscoverStateItemContainerRandomAccess>();
+            for (const auto &a: accRc) {
+                if (*a.selected) {
+                    do_ip(cmd, a.ip);
+                }
+            }
+        }
+
         void init_test_cmd_data() {
-            testCmdList.emplace_back("起飞##cmd_takeoff", []() {
+            testCmdList.emplace_back("起飞##cmd_takeoff", [this]() {
+                test_cmd_do_all(OwlMailDefine::ControlCmd::takeoff);
             });
-            testCmdList.emplace_back("降落##cmd_land", []() {
+            testCmdList.emplace_back("降落##cmd_land", [this]() {
+                test_cmd_do_all(OwlMailDefine::ControlCmd::land);
             });
-            testCmdList.emplace_back("校准##cmd_calibrate", []() {
+            testCmdList.emplace_back("校准##cmd_calibrate", [this]() {
+                test_cmd_do_all(OwlMailDefine::ControlCmd::calibrate);
             });
-            testCmdList.emplace_back("前##cmd_forward", []() {
+            testCmdList.emplace_back("前##cmd_forward", [this]() {
+                test_cmd_do_all(OwlMailDefine::ControlCmd::forward);
             });
-            testCmdList.emplace_back("后##cmd_back", []() {
+            testCmdList.emplace_back("后##cmd_back", [this]() {
+                test_cmd_do_all(OwlMailDefine::ControlCmd::back);
             });
-            testCmdList.emplace_back("左##cmd_left", []() {
+            testCmdList.emplace_back("左##cmd_left", [this]() {
+                test_cmd_do_all(OwlMailDefine::ControlCmd::left);
             });
-            testCmdList.emplace_back("右##cmd_right", []() {
+            testCmdList.emplace_back("右##cmd_right", [this]() {
+                test_cmd_do_all(OwlMailDefine::ControlCmd::right);
             });
-            testCmdList.emplace_back("上##cmd_up", []() {
+            testCmdList.emplace_back("上##cmd_up", [this]() {
+                test_cmd_do_all(OwlMailDefine::ControlCmd::up);
             });
-            testCmdList.emplace_back("下##cmd_down", []() {
+            testCmdList.emplace_back("下##cmd_down", [this]() {
+                test_cmd_do_all(OwlMailDefine::ControlCmd::down);
             });
-            testCmdList.emplace_back("顺##cmd_cw", []() {
+            testCmdList.emplace_back("顺##cmd_cw", [this]() {
+                test_cmd_do_all(OwlMailDefine::ControlCmd::cw);
             });
-            testCmdList.emplace_back("逆##cmd_ccw", []() {
+            testCmdList.emplace_back("逆##cmd_ccw", [this]() {
+                test_cmd_do_all(OwlMailDefine::ControlCmd::ccw);
             });
-//            BOOST_LOG_OWL(trace_gui) << "testCmdList init_test_cmd_data " << testCmdList.size();
         }
 
         std::array<int, 3> goto_pos{0, 0, 0};
@@ -1139,11 +1158,28 @@ namespace OwlImGuiService {
             ImGui::Begin("测试控制", &show_test_cmd_window);
 
             ImVec2 button_sz(60, 30);
-            ImGui::InputInt3("Goto##cmd_Goto_inpot", goto_pos.data());
-            ImGui::SameLine();
-            if (ImGui::Button("Goto##cmd_Goto", button_sz)) {
-                // TODO
-            }
+
+//            ImGui::InputInt3("##cmd_Goto_inpot", goto_pos.data());
+//            ImGui::SameLine();
+//            if (ImGui::Button("Goto##cmd_Goto", button_sz)) {
+//                // TODO
+//                auto &accRc = items.get<DiscoverStateItemContainerRandomAccess>();
+//                for (const auto &a: accRc) {
+//
+//                }
+//            }
+
+//            ImGui::InputInt3("##cmd_mode_inpot", goto_pos.data());
+//            ImGui::SameLine();
+//            if (ImGui::Button("FlyMode##cmd_mode", button_sz)) {
+//                // TODO
+//                auto &accRc = items.get<DiscoverStateItemContainerRandomAccess>();
+//                for (const auto &a: accRc) {
+//
+//                }
+//            }
+
+
             ImGuiStyle &style = ImGui::GetStyle();
             float window_visible_x2 = ImGui::GetWindowPos().x + ImGui::GetWindowContentRegionMax().x;
 

@@ -13,7 +13,23 @@ namespace OwlMailDefine {
         ping,
         stop,
         land,
+        takeoff,
+
+        cw,
+        ccw,
+
+        up,
+        down,
+        left,
+        right,
+        forward,
+        back,
+
+        flyMode,
+
         calibrate,
+
+
         query,
         broadcast,
     };
