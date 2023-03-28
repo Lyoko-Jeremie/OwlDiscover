@@ -1120,7 +1120,7 @@ namespace OwlImGuiService {
 //            BOOST_LOG_OWL(trace_gui) << "testCmdList size " << testCmdList.size();
             for (size_t i = 0; i != testCmdList.size(); ++i) {
                 auto a = testCmdList.at(i);
-                BOOST_LOG_OWL(trace_gui) << "show_test_cmd " << a.name;
+//                BOOST_LOG_OWL(trace_gui) << "show_test_cmd " << a.name;
                 if (ImGui::Button(a.name.c_str(), button_sz)) {
                     if (a.callback) {
                         a.callback();
