@@ -4,13 +4,14 @@
 #define OWLAPRILTAGPROCESSOR_GETIMAGE_H
 
 #include <string>
-#include <memory>
 #include <functional>
 
-#include <boost/log/trivial.hpp>
+
 #include <boost/asio.hpp>
 #include <boost/beast.hpp>
-#include <opencv2/opencv.hpp>
+#include <opencv2/core.hpp>
+#include "../MemoryBoost.h"
+
 
 namespace OwlGetImage {
 

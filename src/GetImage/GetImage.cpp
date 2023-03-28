@@ -3,6 +3,8 @@
 #include "GetImage.h"
 
 #include <string>
+#include <opencv2/opencv.hpp>
+#include "../OwlLog/OwlLog.h"
 
 
 namespace OwlGetImage {
@@ -64,7 +66,7 @@ namespace OwlGetImage {
         // Report a failure
         void
         fail(boost::beast::error_code ec, char const *what) {
-            BOOST_LOG_TRIVIAL(error) << what << ": " << ec.message();
+            BOOST_LOG_OWL(error) << what << ": " << ec.message();
             callback_(ec, false, {});
         }
 
@@ -151,7 +153,7 @@ namespace OwlGetImage {
                     }
 
                 } else {
-                    BOOST_LOG_TRIVIAL(error) << "bad response. :"
+                    BOOST_LOG_OWL(error) << "bad response. :"
                                              << "\ncontent_type:" << res_.at(boost::beast::http::field::content_type)
                                              << "\nX-image-format:" << res_.at("X-image-format");
                     if (callback_) {
@@ -160,7 +162,7 @@ namespace OwlGetImage {
                 }
 
             } else {
-                BOOST_LOG_TRIVIAL(error)
+                BOOST_LOG_OWL(error)
                     << "response not ok . " << " res_.result(): " << res_.result() << "\n"
                     << std::string{reinterpret_cast<char *>(res_.body().data()), res_.body().size()};
                 if (callback_) {
