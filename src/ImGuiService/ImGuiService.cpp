@@ -1099,16 +1099,16 @@ namespace OwlImGuiService {
             });
             testCmdList.emplace_back("逆##cmd_ccw", []() {
             });
-            BOOST_LOG_OWL(trace_gui) << "testCmdList init_test_cmd_data " << testCmdList.size();
+//            BOOST_LOG_OWL(trace_gui) << "testCmdList init_test_cmd_data " << testCmdList.size();
         }
 
         std::array<int, 3> goto_pos{0, 0, 0};
 
         void show_test_cmd() {
-            BOOST_LOG_OWL(trace_gui) << "show_test_cmd start";
+//            BOOST_LOG_OWL(trace_gui) << "show_test_cmd start";
             ImGui::Begin("测试控制", &show_test_cmd_window);
             ImVec2 button_sz(60, 30);
-            BOOST_LOG_OWL(trace_gui) << "show_test_cmd goto";
+//            BOOST_LOG_OWL(trace_gui) << "show_test_cmd goto";
             ImGui::InputInt3("Goto##cmd_Goto_inpot", goto_pos.data());
             ImGui::SameLine();
             if (ImGui::Button("Goto##cmd_Goto", button_sz)) {
@@ -1116,8 +1116,8 @@ namespace OwlImGuiService {
             }
             ImGuiStyle &style = ImGui::GetStyle();
             float window_visible_x2 = ImGui::GetWindowPos().x + ImGui::GetWindowContentRegionMax().x;
-            BOOST_LOG_OWL(trace_gui) << "show_test_cmd testCmdList start";
-            BOOST_LOG_OWL(trace_gui) << "testCmdList size " << testCmdList.size();
+//            BOOST_LOG_OWL(trace_gui) << "show_test_cmd testCmdList start";
+//            BOOST_LOG_OWL(trace_gui) << "testCmdList size " << testCmdList.size();
             for (size_t i = 0; i != testCmdList.size(); ++i) {
                 auto a = testCmdList.at(i);
                 BOOST_LOG_OWL(trace_gui) << "show_test_cmd " << a.name;
@@ -1132,7 +1132,7 @@ namespace OwlImGuiService {
                     ImGui::SameLine();
                 }
             }
-            BOOST_LOG_OWL(trace_gui) << "show_test_cmd end";
+//            BOOST_LOG_OWL(trace_gui) << "show_test_cmd end";
             ImGui::End();
         }
 
