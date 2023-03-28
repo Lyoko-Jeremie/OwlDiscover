@@ -1,7 +1,7 @@
 // jeremie
 
-#ifndef TESTIMGUI_IMGUISERVICE_H
-#define TESTIMGUI_IMGUISERVICE_H
+#ifndef IMGUI_IMGUISERVICE_H
+#define IMGUI_IMGUISERVICE_H
 
 #include "../MemoryBoost.h"
 #include <chrono>
@@ -90,4 +90,4 @@ namespace OwlImGuiService {
 
 } // OwlImGuiService
 
-#endif //TESTIMGUI_IMGUISERVICE_H
+#endif //IMGUI_IMGUISERVICE_H
