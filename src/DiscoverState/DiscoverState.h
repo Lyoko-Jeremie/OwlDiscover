@@ -10,6 +10,7 @@
 #include "../MemoryBoost.h"
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/lexical_cast.hpp>
+#include "../ImGuiService/ImGuiDirectX11.h"
 
 namespace OwlDiscoverState {
 
@@ -30,6 +31,8 @@ namespace OwlDiscoverState {
 
         std::string cacheFirstTime;
         std::string cacheLastTime;
+
+        boost::shared_ptr<OwlImGuiDirectX11::ImGuiD3D11Img> imgData;
 
         auto operator<=>(const DiscoverStateItem &o) const {
             return ip <=> o.ip;
