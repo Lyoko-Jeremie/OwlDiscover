@@ -68,7 +68,7 @@ namespace OwlImGuiService {
         void sendCmdHttpReadOTA(std::string ip);
 
         void analysisOtaReturn(
-                const std::string& httpResponseData,
+                const std::string &httpResponseData,
                 std::string ip
         );
 
@@ -76,7 +76,13 @@ namespace OwlImGuiService {
             return config_->config();
         }
 
+        void listSubnetIp(std::function<void(std::list<std::string>)> callback);
+
         void scanSubnet();
+
+        void scanSubnetPingUdp();
+
+        void scanSubnetPingHttp();
 
     private:
 

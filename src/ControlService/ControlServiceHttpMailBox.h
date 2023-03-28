@@ -4,6 +4,7 @@
 #define OWLDISCOVER_CONTROLSERVICEHTTPMAILBOX_H
 
 #include <utility>
+#include <boost/beast/http/verb.hpp>
 
 #include "../MemoryBoost.h"
 #include "./ControlServiceUdpMailBox.h"
@@ -16,16 +17,19 @@ namespace OwlMailDefine {
         std::string port;
         std::string target;
         std::string data_send;
+        boost::beast::http::verb method;
 
         HttpRequestInfo(
                 std::string host_,
                 std::string port_,
                 std::string target_,
-                std::string data_send_
+                std::string data_send_,
+                boost::beast::http::verb method_
         ) : host(std::move(host_)),
             port(std::move(port_)),
             target(std::move(target_)),
-            data_send(std::move(data_send_)) {}
+            data_send(std::move(data_send_)),
+            method(method_) {}
     };
 
     struct HttpControl2Control;

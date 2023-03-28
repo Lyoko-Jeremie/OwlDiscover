@@ -403,6 +403,20 @@ namespace OwlImGuiService {
             }
         }
 
+        void scanSubnetPingHttp() {
+            auto p = parentPtr_.lock();
+            if (p) {
+                p->scanSubnetPingHttp();
+            }
+        }
+
+        void scanSubnetPingUdp() {
+            auto p = parentPtr_.lock();
+            if (p) {
+                p->scanSubnetPingUdp();
+            }
+        }
+
         void do_all(OwlMailDefine::ControlCmd cmd) {
             auto p = parentPtr_.lock();
             if (p) {
@@ -823,6 +837,12 @@ namespace OwlImGuiService {
                                     "使用Broadcast广播功能主动搜索未知设备，对固件版本无要求。\n对网络影响较大，可能被限速或屏蔽，请勿频繁点击发送。"
                             );
                             ImGui::SameLine();
+                            if (ImGui::Button("全部查询(Unicast Query)")) {
+                                do_all(OwlMailDefine::ControlCmd::query);
+                            }
+                            ImGui::SameLine();
+                            HelpMarker("查询并刷新已列出设备是否在线\n需要(6.1.11.23.03.23d.e2b087f8)以上固件支持。");
+
                             if (ImGui::Button("扫描整个内网(Http Scan)")) {
                                 scanSubnet();
                             }
@@ -831,22 +851,27 @@ namespace OwlImGuiService {
                                     "使用HTTP逐个扫描内网IP，扫描速度很慢，对网络影响很大，"
                             );
                             ImGui::SameLine();
-                            if (ImGui::Button("全部查询(Unicast Query)")) {
-                                do_all(OwlMailDefine::ControlCmd::query);
+                            if (ImGui::Button("Http Ping扫描整个内网(Http Ping Scan)")) {
+                                scanSubnetPingHttp();
                             }
                             ImGui::SameLine();
-                            HelpMarker("查询并刷新已列出设备是否在线\n需要(6.1.11.23.03.23d.e2b087f8)以上固件支持。");
+                            HelpMarker(
+                                    "使用HTTP-Ping逐个扫描内网IP，扫描速度很慢，对网络影响很大，"
+                            );
                             ImGui::SameLine();
-                            ImGui::Text("指令模式：");
-                            ImGui::SameLine();
-                            ImGui::RadioButton("UDP", &cmdType, static_cast<int>(CmdType::Udp));
-                            ImGui::SameLine();
-                            ImGui::RadioButton("HTTP", &cmdType, static_cast<int>(CmdType::Http));
+                            if (ImGui::Button("Udp Ping扫描整个内网(Udp Ping Scan)")) {
+                                scanSubnetPingUdp();
+                            }
                             ImGui::SameLine();
                             HelpMarker(
-                                    "选择控制指令所使用的模式。\nHTTP模式更可靠但更慢，网络不稳定时更加明显。\nUDP在不稳定的网络下可能控制失败，需要多次点击发送指令。"
+                                    "使用Udp-Ping逐个扫描内网IP，扫描速度很慢，对网络影响很大，"
                             );
-//                            ImGui::SameLine();
+                            ImGui::SameLine();
+                            if (ImGui::Button("读取OTA版本")) {
+                                sendCmdHttpReadAllOTA();
+                            }
+
+
                             if (ImGui::Button("全部停止(EmergencyStop)")) {
                                 do_all(OwlMailDefine::ControlCmd::stop);
                             }
@@ -869,9 +894,15 @@ namespace OwlImGuiService {
                                 cleanItem();
                             }
                             ImGui::SameLine();
-                            if (ImGui::Button("读取OTA版本")) {
-                                sendCmdHttpReadAllOTA();
-                            }
+                            ImGui::Text("指令模式：");
+                            ImGui::SameLine();
+                            ImGui::RadioButton("UDP", &cmdType, static_cast<int>(CmdType::Udp));
+                            ImGui::SameLine();
+                            ImGui::RadioButton("HTTP", &cmdType, static_cast<int>(CmdType::Http));
+                            ImGui::SameLine();
+                            HelpMarker(
+                                    "选择控制指令所使用的模式。\nHTTP模式更可靠但更慢，网络不稳定时更加明显。\nUDP在不稳定的网络下可能控制失败，需要多次点击发送指令。"
+                            );
 
                             const float footer_height_to_reserve =
                                     ImGui::GetStyle().ItemSpacing.y + ImGui::GetFrameHeightWithSpacing();
@@ -1105,10 +1136,9 @@ namespace OwlImGuiService {
         std::array<int, 3> goto_pos{0, 0, 0};
 
         void show_test_cmd() {
-//            BOOST_LOG_OWL(trace_gui) << "show_test_cmd start";
             ImGui::Begin("测试控制", &show_test_cmd_window);
+
             ImVec2 button_sz(60, 30);
-//            BOOST_LOG_OWL(trace_gui) << "show_test_cmd goto";
             ImGui::InputInt3("Goto##cmd_Goto_inpot", goto_pos.data());
             ImGui::SameLine();
             if (ImGui::Button("Goto##cmd_Goto", button_sz)) {
@@ -1116,11 +1146,9 @@ namespace OwlImGuiService {
             }
             ImGuiStyle &style = ImGui::GetStyle();
             float window_visible_x2 = ImGui::GetWindowPos().x + ImGui::GetWindowContentRegionMax().x;
-//            BOOST_LOG_OWL(trace_gui) << "show_test_cmd testCmdList start";
-//            BOOST_LOG_OWL(trace_gui) << "testCmdList size " << testCmdList.size();
+
             for (size_t i = 0; i != testCmdList.size(); ++i) {
                 auto a = testCmdList.at(i);
-//                BOOST_LOG_OWL(trace_gui) << "show_test_cmd " << a.name;
                 if (ImGui::Button(a.name.c_str(), button_sz)) {
                     if (a.callback) {
                         a.callback();
@@ -1132,7 +1160,33 @@ namespace OwlImGuiService {
                     ImGui::SameLine();
                 }
             }
-//            BOOST_LOG_OWL(trace_gui) << "show_test_cmd end";
+
+
+            if (ImGui::BeginTable("CmdSelectTable", 2,
+                                  ImGuiTableFlags_Resizable | ImGuiTableFlags_NoSavedSettings |
+                                  ImGuiTableFlags_Borders)) {
+                auto &accRc = items.get<DiscoverStateItemContainerRandomAccess>();
+                for (int i = 0; i < accRc.size(); i++) {
+                    auto it = accRc.begin();
+                    ImGui::TableNextRow();
+                    ImGui::TableNextColumn();
+                    bool isSelected = ImGui::Selectable(
+                            it->ip.c_str(),
+                            it->selected,
+                            ImGuiSelectableFlags_SpanAllColumns);
+                    if (isSelected != it->selected) {
+                    }
+                    // TODO
+                    accRc.modify(it, [isSelected](auto &a) {
+                        a.selected = isSelected;
+                    });
+                    ImGui::TableNextColumn();
+                    ImGui::Text(boost::lexical_cast<std::string>(it->port).c_str());
+                }
+                ImGui::EndTable();
+            }
+
+
             ImGui::End();
         }
 
@@ -1288,12 +1342,14 @@ namespace OwlImGuiService {
                 ip,
                 "8080",
                 "/VERSION",
-                ""
+                "",
+                boost::beast::http::verb::get
         );
 
         m->httpRequestInfo = std::move(a);
 
-        m->callbackRunner = [this, self = shared_from_this(), ip = ip](OwlMailDefine::MailHttpControl2Control &&d) {
+        m->callbackRunner = [this, self = shared_from_this(), ip = std::move(ip)](
+                OwlMailDefine::MailHttpControl2Control &&d) {
             BOOST_ASSERT(d->httpResponseData);
 
             if (d->httpResponseData && !d->httpResponseData->empty()) {
@@ -1335,21 +1391,24 @@ namespace OwlImGuiService {
 
     }
 
-    void ImGuiService::scanSubnet() {
+    void ImGuiService::listSubnetIp(std::function<void(std::list<std::string>)> callback) {
         // https://stackoverflow.com/questions/2674314/get-local-ip-address-using-boost-asio
         auto resolver = boost::make_shared<boost::asio::ip::tcp::resolver>(ioc_);
         boost::system::error_code ec;
         auto host_name = boost::make_shared<std::string>(boost::asio::ip::host_name(ec));
         if (ec) {
-            BOOST_LOG_OWL(error) << "ImGuiService scanSubnet host_name ec " << ec.what();
+            BOOST_LOG_OWL(error) << "ImGuiService listSubnetIp host_name ec " << ec.what();
             return;
         }
         resolver->async_resolve(*host_name, "", [
-                this, self = shared_from_this(), resolver, host_name
+                this, self = shared_from_this(), resolver, host_name, callback
         ](const boost::system::error_code &ec, const boost::asio::ip::tcp::resolver::results_type &results) {
             if (ec) {
-                BOOST_LOG_OWL(error) << "ImGuiService scanSubnet resolver.async_resolve ec " << ec << " what "
+                BOOST_LOG_OWL(error) << "ImGuiService listSubnetIp resolver.async_resolve ec " << ec << " what "
                                      << ec.what();
+                if (callback) {
+                    callback({});
+                }
                 return;
             }
             std::vector<std::string> addrList;
@@ -1361,7 +1420,7 @@ namespace OwlImGuiService {
                         boost::system::error_code ecc;
                         auto as = addr.to_string(ecc);
                         if (ecc) {
-                            BOOST_LOG_OWL(error) << "ImGuiService scanSubnet address to_string ec " << ec.what();
+                            BOOST_LOG_OWL(error) << "ImGuiService listSubnetIp address to_string ec " << ec.what();
                             continue;
                         }
                         addrList.emplace_back(as);
@@ -1369,8 +1428,10 @@ namespace OwlImGuiService {
                 }
             }
             if (addrList.empty()) {
-                BOOST_LOG_OWL(error) << "ImGuiService scanSubnet (addrList.empty()) ";
-                return;
+                BOOST_LOG_OWL(error) << "ImGuiService listSubnetIp (addrList.empty()) ";
+                if (callback) {
+                    callback({});
+                }
             }
             std::string ss{"."};
             std::list<std::string> ipList;
@@ -1388,21 +1449,30 @@ namespace OwlImGuiService {
                     }
                 }
             }
+            if (callback) {
+                callback(ipList);
+            }
+        });
+    }
+
+    void ImGuiService::scanSubnet() {
+        listSubnetIp([this, self = shared_from_this()](const auto &ipList) {
             for (const auto &ip: ipList) {
-                BOOST_LOG_OWL(trace) << "send scan to " << ip;
+//                BOOST_LOG_OWL(trace) << "send scan to " << ip;
                 auto m = boost::make_shared<OwlMailDefine::MailControl2HttpControl::element_type>();
 
                 auto a = boost::make_shared<OwlMailDefine::HttpRequestInfo>(
                         ip,
-                        "8080",
-                        "/VERSION",
-                        ""
+                        boost::lexical_cast<std::string>(8080),
+                        R"(/VERSION)",
+                        "",
+                        boost::beast::http::verb::get
                 );
 
                 m->httpRequestInfo = std::move(a);
 
                 m->callbackRunner = [
-                        this, self = shared_from_this(), ip = ip
+                        this, self = shared_from_this(), ip = std::move(ip)
                 ](OwlMailDefine::MailHttpControl2Control &&d) {
                     BOOST_ASSERT(d->httpResponseData);
                     if (d->httpResponseData && !d->httpResponseData->empty()) {
@@ -1411,6 +1481,30 @@ namespace OwlImGuiService {
                 };
 
                 mailbox_http_->sendA2B(std::move(m));
+            }
+        });
+    }
+
+    void ImGuiService::scanSubnetPingUdp() {
+        listSubnetIp([this, self = shared_from_this()](const auto &ipList) {
+            for (const auto &ip: ipList) {
+//                BOOST_LOG_OWL(trace) << "send scan to " << ip;
+                auto data = boost::make_shared<OwlMailDefine::ControlCmdData>();
+                data->ip = ip;
+                data->cmd = OwlMailDefine::ControlCmd::ping;
+                sendCmdUdp(std::move(data));
+            }
+        });
+    }
+
+    void ImGuiService::scanSubnetPingHttp() {
+        listSubnetIp([this, self = shared_from_this()](const auto &ipList) {
+            for (const auto &ip: ipList) {
+//                BOOST_LOG_OWL(trace) << "send scan to " << ip;
+                auto data = boost::make_shared<OwlMailDefine::ControlCmdData>();
+                data->ip = ip;
+                data->cmd = OwlMailDefine::ControlCmd::ping;
+                sendCmdHttp(std::move(data));
             }
         });
     }

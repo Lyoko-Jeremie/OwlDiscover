@@ -42,6 +42,7 @@ namespace OwlControlService {
             std::string host,
             std::string port,
             std::string target,
+            boost::beast::http::verb method = boost::beast::http::verb::post,
             int version = 11) {
 
         boost::ignore_unused(selfPtr);
@@ -234,7 +235,7 @@ namespace OwlControlService {
                                  }
                                  catch (const std::exception &e) {
                                      BOOST_LOG_OWL(trace_http_error) << "HttpControl sendCmd catch std::exception "
-                                                          << e.what();
+                                                                     << e.what();
                                  }
                                  catch (const std::string &e) {
                                      BOOST_LOG_OWL(trace_http_error) << "HttpControl sendCmd catch std::string " << e;
@@ -259,7 +260,8 @@ namespace OwlControlService {
                      *S,
                      remote_endpoint.address().to_string(),
                      boost::lexical_cast<std::string>(remote_endpoint.port()),
-                     "/cmd");
+                     "/cmd",
+                     boost::beast::http::verb::post);
     }
 
 
@@ -270,6 +272,7 @@ namespace OwlControlService {
             const std::string &host,
             const std::string &port,
             const std::string &target,
+            const boost::beast::http::verb &method,
             int version) {
         BOOST_ASSERT(resultCallback);
 
@@ -280,6 +283,7 @@ namespace OwlControlService {
                     host,
                     port,
                     target,
+                    method,
                     version
             );
         }, [this, self = shared_from_this(),
@@ -305,10 +309,10 @@ namespace OwlControlService {
                     return;
                 } else {
                     BOOST_LOG_OWL(trace_http_error) << "HttpControl send_request() error "
-                                         << " host " << host
-                                         << " port " << port
-                                         << " target " << target
-                                         << " data_send " << data_send;
+                                                    << " host " << host
+                                                    << " port " << port
+                                                    << " target " << target
+                                                    << " data_send " << data_send;
                     if (resultCallback) {
                         resultCallback(std::move(r));
                     }
@@ -320,7 +324,7 @@ namespace OwlControlService {
                 try { std::rethrow_exception(std::move(e)); }
                 catch (const std::exception &e) {
                     BOOST_LOG_OWL(trace_http_error) << "HttpControl co_spawn catch std::exception "
-                                         << e.what();
+                                                    << e.what();
                     what = e.what();
                 }
                 catch (const std::string &e) {
@@ -333,15 +337,15 @@ namespace OwlControlService {
                 }
                 catch (...) {
                     BOOST_LOG_OWL(trace_http_error) << "HttpControl co_spawn catch (...)"
-                                         << "\n" << boost::current_exception_diagnostic_information();
+                                                    << "\n" << boost::current_exception_diagnostic_information();
                     what = boost::current_exception_diagnostic_information();
                 }
                 BOOST_LOG_OWL(trace_http_error) << "HttpControl send_request "
-                                     << what
-                                     << "\n host " << host
-                                     << " port " << port
-                                     << " target " << target
-                                     << " data_send " << data_send;
+                                                << what
+                                                << "\n host " << host
+                                                << " port " << port
+                                                << " target " << target
+                                                << " data_send " << data_send;
 
                 if (resultCallback) {
                     resultCallback(std::pair<bool, std::string>{false, {}});
@@ -431,7 +435,8 @@ namespace OwlControlService {
                              data->httpRequestInfo->data_send,
                              data->httpRequestInfo->host,
                              data->httpRequestInfo->port,
-                             data->httpRequestInfo->target);
+                             data->httpRequestInfo->target,
+                             data->httpRequestInfo->method);
             }
 
         });

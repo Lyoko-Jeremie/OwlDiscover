@@ -6,6 +6,7 @@
 #include "../MemoryBoost.h"
 #include <functional>
 #include <boost/asio.hpp>
+#include <boost/beast/http/verb.hpp>
 #include <boost/lexical_cast.hpp>
 #include "../OwlLog/OwlLog.h"
 #include "../ConfigLoader/ConfigLoader.h"
@@ -68,6 +69,7 @@ namespace OwlControlService {
                 const std::string &host,
                 const std::string &port,
                 const std::string &target,
+                const boost::beast::http::verb &method,
                 int version = 11);
 
         std::pair<bool, boost::json::value> analysis_receive_json(const std::string &data_);
