@@ -5,7 +5,7 @@
 
 namespace boost {
     void assertion_failed(char const *expr, char const *function, char const *file, long line) {
-        BOOST_LOG_OWL(error)
+        BOOST_LOG_OWL(fatal)
             << "assertion_failed : [" << expr << "]"
             << " on function [" << function << "]"
             << " on file [" << file << "]"
@@ -14,7 +14,7 @@ namespace boost {
     }
 
     void assertion_failed_msg(char const *expr, char const *msg, char const *function, char const *file, long line) {
-        BOOST_LOG_OWL(error)
+        BOOST_LOG_OWL(fatal)
             << "assertion_failed_msg : [" << expr << "]"
             << " msg [" << msg << "]"
             << " on function [" << function << "]"
