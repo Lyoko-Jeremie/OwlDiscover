@@ -693,13 +693,16 @@ namespace OwlImGuiServiceImpl {
         }
         ImGui::SameLine();
         if (ImGui::Button((std::string{"Down##show_camera_Down"} + a.ip).c_str())) {
+            auto t1 = boost::make_shared<std::chrono::high_resolution_clock::time_point>(
+                    std::chrono::high_resolution_clock::now()
+            );
             getImageService->get(
                     a.ip,
                     boost::lexical_cast<std::string>(config_->config().ImageServiceHttpPort),
                     "/down",
                     11,
                     [
-                            this, self = shared_from_this(), a
+                            this, self = shared_from_this(), a, t1
                     ](boost::beast::error_code ec, bool ok, cv::Mat img) {
                         if (ec) {
                             BOOST_LOG_OWL(warning) << "show_camera /down ec " << ec.what();
@@ -713,7 +716,10 @@ namespace OwlImGuiServiceImpl {
                             a.imgDataDown->cleanTexture();
                         }
                         img.release();
-                        BOOST_LOG_OWL(trace_gui) << "show_camera /down rb " << rb;
+                        auto t2 = std::chrono::high_resolution_clock::now();
+                        BOOST_LOG_OWL(trace_gui)
+                            << "show_camera /down rb " << rb << " t2-t1 "
+                            << std::chrono::duration_cast<std::chrono::microseconds>(t2 - *t1).count();
 //                            if (ok) {
 //                                auto d = OwlImGuiDirectX11::loadTextureFromMat(img, g_pd3dDevice);
 //                                if (d) {
