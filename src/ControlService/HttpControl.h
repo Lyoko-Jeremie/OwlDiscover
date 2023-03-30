@@ -46,8 +46,6 @@ namespace OwlControlService {
 
         boost::json::parse_options json_parse_options_;
 
-        std::atomic_int id_{1};
-
     public:
 
         void start() {

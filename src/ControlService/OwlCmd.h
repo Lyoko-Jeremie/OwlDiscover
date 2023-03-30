@@ -3,7 +3,11 @@
 #ifndef OWLDISCOVER_OWLCMD_H
 #define OWLDISCOVER_OWLCMD_H
 
+#include <atomic>
+
 namespace OwlCmd {
+
+    extern std::atomic_int packageId;
 
     // follow table come from OwlAccessTerminal
     enum class OwlCmdEnum {

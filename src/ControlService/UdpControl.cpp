@@ -206,7 +206,7 @@ namespace OwlControlService {
         boost::shared_ptr<std::string> S = boost::make_shared<std::string>(
                 boost::json::serialize(boost::json::value{
                         {"cmdId",     static_cast<int>(OwlCmd::OwlCmdEnum::ping)},
-                        {"packageId", ++id_},
+                        {"packageId", ++OwlCmd::packageId},
                 }));
 
         udp_broadcast_socket_.async_send_to(
@@ -234,35 +234,35 @@ namespace OwlControlService {
             case OwlMailDefine::ControlCmd::ping:
                 V = boost::make_shared<boost::json::value>(boost::json::value{
                         {"cmdId",     static_cast<int>(OwlCmd::OwlCmdEnum::ping)},
-                        {"packageId", ++id_},
+                        {"packageId", ++OwlCmd::packageId},
                         {"clientId",  OwlLog::globalClientId},
                 });
                 break;
             case OwlMailDefine::ControlCmd::stop:
                 V = boost::make_shared<boost::json::value>(boost::json::value{
                         {"cmdId",     static_cast<int>(OwlCmd::OwlCmdEnum::emergencyStop)},
-                        {"packageId", ++id_},
+                        {"packageId", ++OwlCmd::packageId},
                         {"clientId",  OwlLog::globalClientId},
                 });
                 break;
             case OwlMailDefine::ControlCmd::calibrate:
                 V = boost::make_shared<boost::json::value>(boost::json::value{
                         {"cmdId",     static_cast<int>(OwlCmd::OwlCmdEnum::calibrate)},
-                        {"packageId", ++id_},
+                        {"packageId", ++OwlCmd::packageId},
                         {"clientId",  OwlLog::globalClientId},
                 });
                 break;
             case OwlMailDefine::ControlCmd::keep:
                 V = boost::make_shared<boost::json::value>(boost::json::value{
                         {"cmdId",     static_cast<int>(OwlCmd::OwlCmdEnum::keep)},
-                        {"packageId", ++id_},
+                        {"packageId", ++OwlCmd::packageId},
                         {"clientId",  OwlLog::globalClientId},
                 });
                 break;
             case OwlMailDefine::ControlCmd::land:
                 V = boost::make_shared<boost::json::value>(boost::json::value{
                         {"cmdId",     static_cast<int>(OwlCmd::OwlCmdEnum::land)},
-                        {"packageId", ++id_},
+                        {"packageId", ++OwlCmd::packageId},
                         {"clientId",  OwlLog::globalClientId},
                 });
                 break;
@@ -270,7 +270,7 @@ namespace OwlControlService {
                 V = boost::make_shared<boost::json::value>(boost::json::value{
                         {"cmdId",     static_cast<int>(OwlCmd::OwlCmdEnum::takeoff)},
                         {"distance",  50},
-                        {"packageId", ++id_},
+                        {"packageId", ++OwlCmd::packageId},
                         {"clientId",  OwlLog::globalClientId},
                 });
                 break;
@@ -279,7 +279,7 @@ namespace OwlControlService {
                         {"cmdId",     static_cast<int>(OwlCmd::OwlCmdEnum::rotate)},
                         {"rotate",    static_cast<int>(OwlCmd::OwlCmdRotateEnum::cw)},
                         {"rote",      45},
-                        {"packageId", ++id_},
+                        {"packageId", ++OwlCmd::packageId},
                         {"clientId",  OwlLog::globalClientId},
                 });
                 break;
@@ -288,7 +288,7 @@ namespace OwlControlService {
                         {"cmdId",     static_cast<int>(OwlCmd::OwlCmdEnum::rotate)},
                         {"rotate",    static_cast<int>(OwlCmd::OwlCmdRotateEnum::ccw)},
                         {"rote",      45},
-                        {"packageId", ++id_},
+                        {"packageId", ++OwlCmd::packageId},
                         {"clientId",  OwlLog::globalClientId},
                 });
                 break;
@@ -297,7 +297,7 @@ namespace OwlControlService {
                         {"cmdId",     static_cast<int>(OwlCmd::OwlCmdEnum::move)},
                         {"forward",   static_cast<int>(OwlCmd::OwlCmdMoveEnum::up)},
                         {"distance",  50},
-                        {"packageId", ++id_},
+                        {"packageId", ++OwlCmd::packageId},
                         {"clientId",  OwlLog::globalClientId},
                 });
                 break;
@@ -306,7 +306,7 @@ namespace OwlControlService {
                         {"cmdId",     static_cast<int>(OwlCmd::OwlCmdEnum::move)},
                         {"forward",   static_cast<int>(OwlCmd::OwlCmdMoveEnum::down)},
                         {"distance",  50},
-                        {"packageId", ++id_},
+                        {"packageId", ++OwlCmd::packageId},
                         {"clientId",  OwlLog::globalClientId},
                 });
                 break;
@@ -315,7 +315,7 @@ namespace OwlControlService {
                         {"cmdId",     static_cast<int>(OwlCmd::OwlCmdEnum::move)},
                         {"forward",   static_cast<int>(OwlCmd::OwlCmdMoveEnum::left)},
                         {"distance",  50},
-                        {"packageId", ++id_},
+                        {"packageId", ++OwlCmd::packageId},
                         {"clientId",  OwlLog::globalClientId},
                 });
                 break;
@@ -324,7 +324,7 @@ namespace OwlControlService {
                         {"cmdId",     static_cast<int>(OwlCmd::OwlCmdEnum::move)},
                         {"forward",   static_cast<int>(OwlCmd::OwlCmdMoveEnum::right)},
                         {"distance",  50},
-                        {"packageId", ++id_},
+                        {"packageId", ++OwlCmd::packageId},
                         {"clientId",  OwlLog::globalClientId},
                 });
                 break;
@@ -333,7 +333,7 @@ namespace OwlControlService {
                         {"cmdId",     static_cast<int>(OwlCmd::OwlCmdEnum::move)},
                         {"forward",   static_cast<int>(OwlCmd::OwlCmdMoveEnum::forward)},
                         {"distance",  50},
-                        {"packageId", ++id_},
+                        {"packageId", ++OwlCmd::packageId},
                         {"clientId",  OwlLog::globalClientId},
                 });
                 break;
@@ -342,7 +342,7 @@ namespace OwlControlService {
                         {"cmdId",     static_cast<int>(OwlCmd::OwlCmdEnum::move)},
                         {"forward",   static_cast<int>(OwlCmd::OwlCmdMoveEnum::back)},
                         {"distance",  50},
-                        {"packageId", ++id_},
+                        {"packageId", ++OwlCmd::packageId},
                         {"clientId",  OwlLog::globalClientId},
                 });
                 break;
