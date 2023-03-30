@@ -20,7 +20,7 @@ set(CMAKE_CXX_STANDARD 20)
 #set(DEBUG_log_multicast ON)
 #set(trace_http ON)
 #set(DEBUG_Mailbox ON)
-set(DEBUG_log_gui ON)
+#set(DEBUG_log_gui ON)
 
 # ============================================================================================
 
