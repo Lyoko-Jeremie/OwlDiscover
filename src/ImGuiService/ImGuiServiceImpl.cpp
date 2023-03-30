@@ -257,6 +257,55 @@ namespace OwlImGuiServiceImpl {
 
     }
 
+    void ImGuiServiceImpl::update_package_send_info(const boost::shared_ptr<OwlDiscoverState::PackageSendInfo> &s) {
+        BOOST_ASSERT(s);
+        BOOST_ASSERT(!weak_from_this().expired());
+
+        boost::asio::dispatch(ioc_, [this, s, self = shared_from_this()]() {
+            BOOST_ASSERT(s);
+            BOOST_ASSERT(self);
+
+            auto &acc = timeoutInfo.get<OwlDiscoverState::PackageSendInfo::PKG>();
+            const auto &it = acc.find(OwlDiscoverState::PackageSendInfo::PKG::make_tuple(*s));
+            if (it == acc.end()) {
+                if (s->direct == OwlDiscoverState::PackageSendInfoDirectEnum::in) {
+                    BOOST_LOG_OWL(trace_gui) << "ImGuiServiceImpl::update_package_send_info (it == accIp.end()) ip "
+                                             << s->ip;
+                    // need have out package record first
+                    // ignore
+                    return;
+                } else {
+                    // a new out package, record it
+                    acc.insert(*s);
+                    return;
+                }
+            }
+            if (s->direct == OwlDiscoverState::PackageSendInfoDirectEnum::state) {
+                BOOST_LOG_OWL(trace_gui) << "ImGuiServiceImpl::update_package_send_info network wrong ip "
+                                         << s->ip;
+                // this package are end
+                // network wrong
+                // ignore
+                return;
+            }
+            if (s->direct == OwlDiscoverState::PackageSendInfoDirectEnum::out) {
+                BOOST_LOG_OWL(trace_gui) << "ImGuiServiceImpl::update_package_send_info duplicate package ip "
+                                         << s->ip;
+                // duplicate package
+                // ignore
+                return;
+            }
+            // update the inTime & delay & state
+            acc.modify(it, [s](OwlDiscoverState::PackageSendInfo &a) { ;
+                a.direct = OwlDiscoverState::PackageSendInfoDirectEnum::state;
+                a.inTime = s->inTime;
+                a.updateDelay();
+            });
+
+        });
+
+    }
+
     void ImGuiServiceImpl::sendCmdHttpReadAllOTA() {
         auto p = parentPtr_.lock();
         if (p) {
@@ -356,7 +405,7 @@ namespace OwlImGuiServiceImpl {
 
     void ImGuiServiceImpl::sortItemByDuration30() {
         auto now = OwlDiscoverState::DiscoverStateItem::now();
-        auto &accIp = items.get<DiscoverStateItemContainerRandomAccess>();
+        auto &accIp = items.get<DiscoverStateItemContainerSequencedAccess>();
         accIp.sort([&now](
                 const OwlDiscoverState::DiscoverStateItem &a,
                 const OwlDiscoverState::DiscoverStateItem &b
@@ -384,7 +433,7 @@ namespace OwlImGuiServiceImpl {
 
     void ImGuiServiceImpl::sortItemByDuration() {
         auto now = OwlDiscoverState::DiscoverStateItem::now();
-        auto &accIp = items.get<DiscoverStateItemContainerRandomAccess>();
+        auto &accIp = items.get<DiscoverStateItemContainerSequencedAccess>();
         accIp.sort([&now](
                 const OwlDiscoverState::DiscoverStateItem &a,
                 const OwlDiscoverState::DiscoverStateItem &b
@@ -423,7 +472,7 @@ namespace OwlImGuiServiceImpl {
     }
 
     void ImGuiServiceImpl::test_cmd_do_all(OwlMailDefine::ControlCmd cmd) {
-        auto &accRc = items.get<DiscoverStateItemContainerRandomAccess>();
+        auto &accRc = items.get<DiscoverStateItemContainerSequencedAccess>();
         for (const auto &a: accRc) {
             if (*a.selected) {
                 do_ip(cmd, a.ip);
@@ -476,7 +525,7 @@ namespace OwlImGuiServiceImpl {
 //            ImGui::SameLine();
 //            if (ImGui::Button("Goto##cmd_Goto", button_sz)) {
 //                // TODO
-//                auto &accRc = items.get<DiscoverStateItemContainerRandomAccess>();
+//                auto &accRc = items.get<DiscoverStateItemContainerSequencedAccess>();
 //                for (const auto &a: accRc) {
 //
 //                }
@@ -486,7 +535,7 @@ namespace OwlImGuiServiceImpl {
 //            ImGui::SameLine();
 //            if (ImGui::Button("FlyMode##cmd_mode", button_sz)) {
 //                // TODO
-//                auto &accRc = items.get<DiscoverStateItemContainerRandomAccess>();
+//                auto &accRc = items.get<DiscoverStateItemContainerSequencedAccess>();
 //                for (const auto &a: accRc) {
 //
 //                }
@@ -515,7 +564,7 @@ namespace OwlImGuiServiceImpl {
         if (ImGui::BeginTable("CmdSelectTable", 2,
                               ImGuiTableFlags_Resizable | ImGuiTableFlags_NoSavedSettings |
                               ImGuiTableFlags_Borders)) {
-            auto &accRc = items.get<DiscoverStateItemContainerRandomAccess>();
+            auto &accRc = items.get<DiscoverStateItemContainerSequencedAccess>();
             for (const auto &a: accRc) {
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();

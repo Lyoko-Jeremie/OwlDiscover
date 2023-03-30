@@ -57,11 +57,15 @@ namespace OwlImGuiServiceImpl {
 
     struct DiscoverStateItemContainerRandomAccess {
     };
+    struct DiscoverStateItemContainerSequencedAccess {
+    };
 
     typedef boost::multi_index_container<
             OwlDiscoverState::DiscoverStateItem,
             boost::multi_index::indexed_by<
-                    boost::multi_index::sequenced<>,
+                    boost::multi_index::sequenced<
+                            boost::multi_index::tag<DiscoverStateItemContainerSequencedAccess>
+                    >,
                     boost::multi_index::ordered_unique<
                             boost::multi_index::identity<OwlDiscoverState::DiscoverStateItem>
                     >,
@@ -128,6 +132,8 @@ namespace OwlImGuiServiceImpl {
 
         DiscoverStateItemContainer items;
 
+        OwlDiscoverState::PackageSendInfoContainer timeoutInfo;
+
     private:
 
         bool CreateDeviceD3D(HWND hWnd);
@@ -150,6 +156,8 @@ namespace OwlImGuiServiceImpl {
         void new_state(const boost::shared_ptr<OwlDiscoverState::DiscoverStateItem> &a);
 
         void new_state(const boost::shared_ptr<OwlDiscoverState::DiscoverState> &s);
+
+        void update_package_send_info(const boost::shared_ptr<OwlDiscoverState::PackageSendInfo> &s);
 
     private:
 

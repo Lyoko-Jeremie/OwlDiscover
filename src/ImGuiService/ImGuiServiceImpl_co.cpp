@@ -339,7 +339,7 @@ namespace OwlImGuiServiceImpl {
                             ImGui::BeginChild("AddrList", ImVec2(0, -footer_height_to_reserve),
                                               true, ImGuiWindowFlags_HorizontalScrollbar);
 
-                            auto &accRc = items.get<DiscoverStateItemContainerRandomAccess>();
+                            auto &accRc = items.get<DiscoverStateItemContainerSequencedAccess>();
                             if (accRc.empty()) {
                                 ImGui::Text("空列表");
                             } else {
@@ -393,9 +393,10 @@ namespace OwlImGuiServiceImpl {
 
                                     ImGui::TableHeadersRow();
 
-                                    for (size_t i = 0; i < accRc.size(); ++i) {
-                                        auto &n = accRc.at(i);
-                                        auto it = accRc.begin() + i;
+                                    auto itN = accRc.begin();
+                                    size_t i = 0;
+                                    for (; i < accRc.size(); ++itN, ++i) {
+                                        auto &n = *itN;
                                         ImGui::TableNextRow();
                                         ImGui::TableNextColumn();
                                         ImGui::Text(boost::lexical_cast<std::string>(i).c_str());
@@ -462,15 +463,11 @@ namespace OwlImGuiServiceImpl {
                                         ImGui::TableNextColumn();
                                         if (!*(n.showCamera)) {
                                             if (ImGui::SmallButton(("相机测试##camera_test_f" + n.ip).c_str())) {
-                                                accRc.modify(it, [](OwlDiscoverState::DiscoverStateItem &nn) {
-                                                    *(nn.showCamera) = true;
-                                                });
+                                                *(n.showCamera) = true;
                                             }
                                         } else {
                                             if (ImGui::SmallButton(("相机测试##camera_test_t" + n.ip).c_str())) {
-                                                accRc.modify(it, [](OwlDiscoverState::DiscoverStateItem &nn) {
-                                                    *(nn.showCamera) = false;
-                                                });
+                                                *(n.showCamera) = false;
                                             }
                                         }
                                     }
@@ -504,7 +501,7 @@ namespace OwlImGuiServiceImpl {
                 }
 
                 /*if (show_camera_window)*/ {
-                    auto &accRc = items.get<DiscoverStateItemContainerRandomAccess>();
+                    auto &accRc = items.get<DiscoverStateItemContainerSequencedAccess>();
                     for (const auto &a: accRc) {
                         if (*(a.showCamera)) {
                             show_camera(a);

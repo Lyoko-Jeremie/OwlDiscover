@@ -49,6 +49,8 @@ namespace OwlMailDefine {
 
         bool updateOnly = false;
 
+        boost::shared_ptr<OwlDiscoverState::PackageSendInfo> packageSendInfo;
+
         std::function<void(boost::shared_ptr<HttpControl2Control>)> runner;
     };
 

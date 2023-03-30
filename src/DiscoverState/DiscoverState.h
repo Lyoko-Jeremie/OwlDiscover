@@ -7,12 +7,153 @@
 #include <deque>
 #include <utility>
 #include <memory>
+#include <tuple>
 #include "../MemoryBoost.h"
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/lexical_cast.hpp>
 #include "../ImGuiService/ImGuiDirectX11.h"
 
+
+#include <boost/multi_index_container.hpp>
+#include <boost/multi_index/tag.hpp>
+#include <boost/multi_index/member.hpp>
+#include <boost/multi_index/identity.hpp>
+#include <boost/multi_index/hashed_index.hpp>
+#include <boost/multi_index/sequenced_index.hpp>
+#include <boost/multi_index/ordered_index.hpp>
+#include <boost/multi_index/random_access_index.hpp>
+#include <boost/multi_index/composite_key.hpp>
+
+
 namespace OwlDiscoverState {
+
+    enum class PackageSendInfoDirectEnum {
+        out = 1,
+        in = 2,
+        state = 3,
+    };
+
+    struct PackageSendInfo {
+        struct SequencedAccess {
+        };
+        struct RandomAccess {
+        };
+
+        struct IP {
+        };
+        const std::string ip;
+
+        // send out (to network (request package))
+        boost::posix_time::ptime outTime;
+        // receive int (come from network (response package))
+        boost::posix_time::ptime inTime;
+
+        void setNowOutTime() {
+            outTime = boost::posix_time::microsec_clock::local_time();
+        }
+
+        void setNowInTime() {
+            inTime = boost::posix_time::microsec_clock::local_time();
+        }
+
+        struct PKG {
+            static std::tuple<std::string, size_t, size_t, size_t> make_tuple(const PackageSendInfo &o) {
+                return std::make_tuple(
+                        o.ip,
+                        o.packageId,
+                        o.cmdId,
+                        o.clientId
+                );
+            }
+        };
+
+        const size_t packageId;
+        const size_t cmdId;
+        const size_t clientId;
+
+        PackageSendInfoDirectEnum direct;
+
+        PackageSendInfo() = delete;
+
+        PackageSendInfo(
+                std::string ip_,
+                size_t packageId_,
+                size_t cmdId_,
+                size_t clientId_,
+                PackageSendInfoDirectEnum direct_
+        ) : ip(std::move(ip_)),
+            packageId(packageId_),
+            cmdId(cmdId_),
+            clientId(clientId_),
+            direct(direct_) {
+            if (direct == PackageSendInfoDirectEnum::out) {
+                setNowOutTime();
+            }
+            if (direct == PackageSendInfoDirectEnum::in) {
+                setNowInTime();
+            }
+        }
+
+        size_t msDelay = 0;
+
+        bool updateDelay() {
+            if (outTime == boost::posix_time::not_a_date_time) {
+                msDelay = 0;
+                return false;
+            }
+            if (inTime == boost::posix_time::not_a_date_time) {
+                msDelay = 0;
+                return false;
+            }
+            auto a = (inTime - outTime);
+            msDelay = a.total_milliseconds();
+            return msDelay > 0;
+        }
+
+        auto operator<=>(const PackageSendInfo &o) const {
+            auto ipO = ip <=> o.ip;
+            if (ipO != std::strong_ordering::equivalent) {
+                return ipO;
+            }
+            if (outTime != o.outTime) {
+                return outTime < o.outTime ? std::strong_ordering::less : std::strong_ordering::greater;
+            }
+            if (inTime != o.inTime) {
+                return inTime < o.inTime ? std::strong_ordering::less : std::strong_ordering::greater;
+            }
+            return msDelay <=> o.msDelay;
+        }
+    };
+
+
+    typedef boost::multi_index_container<
+            OwlDiscoverState::PackageSendInfo,
+            boost::multi_index::indexed_by<
+                    boost::multi_index::sequenced<
+                            boost::multi_index::tag<OwlDiscoverState::PackageSendInfo::SequencedAccess>
+                    >,
+                    boost::multi_index::ordered_unique<
+                            boost::multi_index::identity<OwlDiscoverState::PackageSendInfo>
+                    >,
+                    boost::multi_index::hashed_non_unique<
+                            boost::multi_index::tag<OwlDiscoverState::PackageSendInfo::IP>,
+                            boost::multi_index::member<OwlDiscoverState::PackageSendInfo, const std::string, &OwlDiscoverState::PackageSendInfo::ip>
+                    >,
+                    boost::multi_index::hashed_unique<
+                            boost::multi_index::tag<OwlDiscoverState::PackageSendInfo::PKG>,
+                            boost::multi_index::composite_key<
+                                    OwlDiscoverState::PackageSendInfo,
+                                    boost::multi_index::member<OwlDiscoverState::PackageSendInfo, const std::string, &OwlDiscoverState::PackageSendInfo::ip>,
+                                    boost::multi_index::member<OwlDiscoverState::PackageSendInfo, const size_t, &OwlDiscoverState::PackageSendInfo::packageId>,
+                                    boost::multi_index::member<OwlDiscoverState::PackageSendInfo, const size_t, &OwlDiscoverState::PackageSendInfo::cmdId>,
+                                    boost::multi_index::member<OwlDiscoverState::PackageSendInfo, const size_t, &OwlDiscoverState::PackageSendInfo::clientId>
+                            >
+                    >/*,
+                    boost::multi_index::random_access<
+                            boost::multi_index::tag<OwlDiscoverState::PackageSendInfo::RandomAccess>
+                    >*/
+            >
+    > PackageSendInfoContainer;
 
     struct DiscoverStateItem {
         struct IP {

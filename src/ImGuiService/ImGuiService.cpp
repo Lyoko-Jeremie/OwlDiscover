@@ -44,7 +44,7 @@ namespace OwlImGuiService {
                 if (data->state) {
                     impl->new_state(data->state);
                 } else {
-                    BOOST_LOG_OWL(warning) << "ImGuiService mailbox_ig_->receiveA2B (data->state) else";
+                    BOOST_LOG_OWL(trace_gui) << "ImGuiService mailbox_ig_->receiveA2B (data->state) else";
                 }
 
                 mailbox_ig_->sendB2A(std::move(m));
@@ -69,6 +69,9 @@ namespace OwlImGuiService {
                     impl->new_state(item);
                 }
             }
+            if (data->packageSendInfo) {
+                impl->update_package_send_info(data->packageSendInfo);
+            }
         });
 
         mailbox_http_->receiveB2A([this](OwlMailDefine::MailHttpControl2Control &&data) {
@@ -83,6 +86,9 @@ namespace OwlImGuiService {
                 if (data->runner) {
                     data->runner(data);
                 }
+            }
+            if (data->packageSendInfo) {
+                impl->update_package_send_info(data->packageSendInfo);
             }
         });
 
