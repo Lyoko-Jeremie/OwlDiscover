@@ -340,10 +340,11 @@ namespace OwlImGuiServiceImpl {
                                               true, ImGuiWindowFlags_HorizontalScrollbar);
 
                             auto &accRc = items.get<DiscoverStateItemContainerSequencedAccess>();
+                            auto &accT = timeoutInfo.get<OwlDiscoverState::PackageSendInfo::IP>();
                             if (accRc.empty()) {
                                 ImGui::Text("空列表");
                             } else {
-                                int col = 17;
+                                int col = 18;
                                 if (ImGui::BeginTable("AddrTable", col,
                                                       table_config.table_flags,
                                                       ImVec2(0, 0))) {
@@ -352,7 +353,10 @@ namespace OwlImGuiServiceImpl {
                                                                  ImGuiTableColumnFlags_WidthFixed |
                                                                  ImGuiTableColumnFlags_NoHide, 0.0f);
                                     ImGui::TableSetupColumn("IP", ImGuiTableColumnFlags_WidthFixed, 0.0f);
-                                    ImGui::TableSetupColumn("PORT", ImGuiTableColumnFlags_WidthFixed, 0.0f);
+                                    ImGui::TableSetupColumn("PORT", ImGuiTableColumnFlags_NoSort |
+                                                                    ImGuiTableColumnFlags_WidthFixed, 0.0f);
+                                    ImGui::TableSetupColumn("Timeout", ImGuiTableColumnFlags_NoSort |
+                                                                       ImGuiTableColumnFlags_WidthFixed, 0.0f);
                                     ImGui::TableSetupColumn("上次上线间隔", ImGuiTableColumnFlags_NoSort |
                                                                             ImGuiTableColumnFlags_WidthFixed, 0.0f);
                                     ImGui::TableSetupColumn("降落", ImGuiTableColumnFlags_NoSort |
@@ -405,6 +409,15 @@ namespace OwlImGuiServiceImpl {
                                         ImGui::TableNextColumn();
                                         ImGui::Text(boost::lexical_cast<std::string>(n.port).c_str());
                                         ImGui::TableNextColumn();
+                                        {
+                                            auto nn = accT.find(n.ip);
+                                            if (nn != accT.end()) {
+                                                ImGui::Text(boost::lexical_cast<std::string>(nn->msDelay).c_str());
+                                            } else {
+                                                ImGui::Text("0");
+                                            }
+                                            ImGui::TableNextColumn();
+                                        }
                                         ImGui::Text(n.nowDuration().c_str());
                                         if (ImGui::IsItemHovered()) {
                                             ImGui::SetTooltip("最近一次在线时间是%s秒前", n.nowDuration().c_str());
