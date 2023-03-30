@@ -269,7 +269,7 @@ namespace OwlImGuiServiceImpl {
             const auto &it = acc.find(OwlDiscoverState::PackageSendInfo::PKG::make_tuple(*s));
             if (it == acc.end()) {
                 if (s->direct == OwlDiscoverState::PackageSendInfoDirectEnum::in) {
-                    BOOST_LOG_OWL(trace_gui) << "ImGuiServiceImpl::update_package_send_info (it == accIp.end()) ip "
+                    BOOST_LOG_OWL(warning) << "ImGuiServiceImpl::update_package_send_info (it == accIp.end()) ip "
                                              << s->ip;
                     // need have out package record first
                     // ignore
@@ -277,11 +277,13 @@ namespace OwlImGuiServiceImpl {
                 } else {
                     // a new out package, record it
                     acc.insert(*s);
+                    BOOST_LOG_OWL(trace_gui) << "ImGuiServiceImpl::update_package_send_info new ip "
+                                             << s->ip;
                     return;
                 }
             }
             if (s->direct == OwlDiscoverState::PackageSendInfoDirectEnum::state) {
-                BOOST_LOG_OWL(trace_gui) << "ImGuiServiceImpl::update_package_send_info network wrong ip "
+                BOOST_LOG_OWL(warning) << "ImGuiServiceImpl::update_package_send_info network wrong ip "
                                          << s->ip;
                 // this package are end
                 // network wrong
@@ -289,13 +291,15 @@ namespace OwlImGuiServiceImpl {
                 return;
             }
             if (s->direct == OwlDiscoverState::PackageSendInfoDirectEnum::out) {
-                BOOST_LOG_OWL(trace_gui) << "ImGuiServiceImpl::update_package_send_info duplicate package ip "
+                BOOST_LOG_OWL(warning) << "ImGuiServiceImpl::update_package_send_info duplicate package ip "
                                          << s->ip;
                 // duplicate package
                 // ignore
                 return;
             }
             // update the inTime & delay & state
+            BOOST_LOG_OWL(trace_gui) << "ImGuiServiceImpl::update_package_send_info update ip "
+                                     << s->ip;
             acc.modify(it, [s](OwlDiscoverState::PackageSendInfo &a) { ;
                 a.direct = OwlDiscoverState::PackageSendInfoDirectEnum::state;
                 a.inTime = s->inTime;
