@@ -186,6 +186,8 @@ namespace OwlImGuiService {
                 OwlMailDefine::MailHttpControl2Control &&d) {
             BOOST_ASSERT(d->httpResponseData);
 
+            BOOST_LOG_OWL(warning) << "ImGuiService sendCmdHttpReadOTA() d->httpResponseData "
+                                   << *(d->httpResponseData);
             if (d->httpResponseData && !d->httpResponseData->empty()) {
                 analysisOtaReturn(*d->httpResponseData, ip);
             }

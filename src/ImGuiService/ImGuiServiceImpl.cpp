@@ -672,8 +672,9 @@ namespace OwlImGuiServiceImpl {
                         if (ec) {
                             BOOST_LOG_OWL(warning) << "show_camera /front ec " << ec.what();
                             return;
-                        } else {
-
+                        }
+                        if (img.empty()) {
+                            return;
                         }
                         auto rb = a.imgDataFont->updateTexture(img, g_pd3dDevice);
                         if (!rb) {
@@ -702,6 +703,9 @@ namespace OwlImGuiServiceImpl {
                     ](boost::beast::error_code ec, bool ok, cv::Mat img) {
                         if (ec) {
                             BOOST_LOG_OWL(warning) << "show_camera /down ec " << ec.what();
+                            return;
+                        }
+                        if (img.empty()) {
                             return;
                         }
                         auto rb = a.imgDataDown->updateTexture(img, g_pd3dDevice);
