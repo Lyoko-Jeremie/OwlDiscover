@@ -126,8 +126,15 @@ namespace OwlGetImage {
                 std::size_t bytes_transferred) {
             boost::ignore_unused(bytes_transferred);
 
-            if (ec)
-                return fail(ec, "read");
+            if (ec) {
+                if (ec == boost::beast::http::error::end_of_stream) {
+                    // ignore, end_of_stream is not error, it only means peer closed
+                    // https://github.com/boostorg/beast/issues/1023
+                    // https://github.com/Socks5Balancer/Socks5BalancerAsio/blob/b58f7d13fc5554f563e0ba168fc479c8c88f3643/src/EmbedWebServer.cpp#L323
+                } else {
+                    return fail(ec, "read");
+                }
+            }
 
             stream_.expires_never();
 
@@ -154,8 +161,8 @@ namespace OwlGetImage {
 
                 } else {
                     BOOST_LOG_OWL(error) << "bad response. :"
-                                             << "\ncontent_type:" << res_.at(boost::beast::http::field::content_type)
-                                             << "\nX-image-format:" << res_.at("X-image-format");
+                                         << "\ncontent_type:" << res_.at(boost::beast::http::field::content_type)
+                                         << "\nX-image-format:" << res_.at("X-image-format");
                     if (callback_) {
                         callback_({}, false, {});
                     }

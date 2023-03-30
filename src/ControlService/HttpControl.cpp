@@ -113,8 +113,14 @@ namespace OwlControlService {
                 stream, b, res,
                 boost::asio::redirect_error(use_awaitable, ec_));
         if (ec_) {
-            BOOST_LOG_OWL(trace_http_error) << "OwlControlService do_session ec_ " << ec_.what();
-            co_return std::pair<bool, std::string>{false, std::string{}};
+            if (ec_ == boost::beast::http::error::end_of_stream) {
+                // ignore, end_of_stream is not error, it only means peer closed
+                // https://github.com/boostorg/beast/issues/1023
+                // https://github.com/Socks5Balancer/Socks5BalancerAsio/blob/b58f7d13fc5554f563e0ba168fc479c8c88f3643/src/EmbedWebServer.cpp#L323
+            } else {
+                BOOST_LOG_OWL(trace_http_error) << "OwlControlService do_session ec_ " << ec_.what();
+                co_return std::pair<bool, std::string>{false, std::string{}};
+            }
         }
 
         // Write the message to standard out
