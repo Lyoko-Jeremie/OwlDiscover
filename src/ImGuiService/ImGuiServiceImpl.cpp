@@ -135,6 +135,7 @@ namespace OwlImGuiServiceImpl {
 
             // re short it
             sortItem();
+            remove_old_package_send_info();
 
         });
     }
@@ -165,6 +166,7 @@ namespace OwlImGuiServiceImpl {
 
             // re short it
             // sortItem();
+            remove_old_package_send_info();
 
         });
     }
@@ -207,6 +209,7 @@ namespace OwlImGuiServiceImpl {
 
             // re short it
             sortItem();
+            remove_old_package_send_info();
 
         });
 
@@ -252,8 +255,39 @@ namespace OwlImGuiServiceImpl {
 
             // re short it
             sortItem();
+            remove_old_package_send_info();
 
         });
+
+    }
+
+    void ImGuiServiceImpl::remove_old_package_send_info() {
+        BOOST_ASSERT(!weak_from_this().expired());
+
+        auto &acc = timeoutInfo.get<OwlDiscoverState::PackageSendInfo::SequencedAccess>();
+        auto &accIp = items.get<OwlDiscoverState::DiscoverStateItem::IP>();
+        auto it = acc.begin();
+        while (it != acc.end()) {
+            if (accIp.find(it->ip) == accIp.end()) {
+                // remove not valid item
+                it = acc.erase(it);
+                continue;
+            }
+            if (it->needUpdateDelay()) {
+                // update delay
+                acc.modify(it, [](OwlDiscoverState::PackageSendInfo &a) { ;
+                    a.updateDelay();
+                });
+            }
+            if (it->msDelay > 1000 * 60 * 2) {
+                // remove timeout>1m item
+                it = acc.erase(it);
+                continue;
+            } else {
+                ++it;
+                continue;
+            }
+        }
 
     }
 
@@ -270,7 +304,7 @@ namespace OwlImGuiServiceImpl {
             if (it == acc.end()) {
                 if (s->direct == OwlDiscoverState::PackageSendInfoDirectEnum::in) {
                     BOOST_LOG_OWL(warning) << "ImGuiServiceImpl::update_package_send_info (it == accIp.end()) ip "
-                                             << s->ip;
+                                           << s->ip;
                     // need have out package record first
                     // ignore
                     return;
@@ -279,12 +313,13 @@ namespace OwlImGuiServiceImpl {
                     acc.insert(*s);
                     BOOST_LOG_OWL(trace_gui) << "ImGuiServiceImpl::update_package_send_info new ip "
                                              << s->ip;
+                    remove_old_package_send_info();
                     return;
                 }
             }
             if (s->direct == OwlDiscoverState::PackageSendInfoDirectEnum::state) {
                 BOOST_LOG_OWL(warning) << "ImGuiServiceImpl::update_package_send_info network wrong ip "
-                                         << s->ip;
+                                       << s->ip;
                 // this package are end
                 // network wrong
                 // ignore
@@ -292,7 +327,7 @@ namespace OwlImGuiServiceImpl {
             }
             if (s->direct == OwlDiscoverState::PackageSendInfoDirectEnum::out) {
                 BOOST_LOG_OWL(warning) << "ImGuiServiceImpl::update_package_send_info duplicate package ip "
-                                         << s->ip;
+                                       << s->ip;
                 // duplicate package
                 // ignore
                 return;
@@ -305,6 +340,7 @@ namespace OwlImGuiServiceImpl {
                 a.inTime = s->inTime;
                 a.updateDelay();
             });
+            remove_old_package_send_info();
 
         });
 

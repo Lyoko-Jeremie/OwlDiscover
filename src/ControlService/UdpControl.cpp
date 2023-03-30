@@ -66,6 +66,8 @@ namespace OwlControlService {
             o.contains("msg") &&
             o.contains("result")) {
             auto cmdId = get(o, "cmdId", 0);
+            auto packageId = get(o, "packageId", 0);
+            auto clientId = get(o, "clientId", 0);
             auto result = get(o, "result", false);
             if (result) {
 
@@ -84,6 +86,16 @@ namespace OwlControlService {
                     controlCmdData->programVersion = programVersion;
                     controlCmdData->gitRev = gitRev;
                     controlCmdData->buildTime = buildTime;
+                }
+
+                {
+                    m->packageSendInfo = boost::make_shared<OwlDiscoverState::PackageSendInfo>(
+                            receiver_endpoint->address().to_string(),
+                            packageId,
+                            cmdId,
+                            clientId,
+                            OwlDiscoverState::PackageSendInfoDirectEnum::in
+                    );
                 }
 
                 m->discoverStateItem = std::move(controlCmdData);
@@ -207,6 +219,7 @@ namespace OwlControlService {
                 boost::json::serialize(boost::json::value{
                         {"cmdId",     static_cast<int>(OwlCmd::OwlCmdEnum::ping)},
                         {"packageId", ++OwlCmd::packageId},
+                        {"clientId",  OwlLog::globalClientId},
                 }));
 
         udp_broadcast_socket_.async_send_to(

@@ -331,7 +331,6 @@ namespace OwlControlService {
                                                          get(ooo, "clientId", 0),
                                                          OwlDiscoverState::PackageSendInfoDirectEnum::in
                                                  );
-                                                 mm->packageSendInfo->setNowInTime();
                                              }
 
                                              auto programVersion = get<std::string>(o, "Version", "");

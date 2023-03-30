@@ -96,6 +96,16 @@ namespace OwlDiscoverState {
 
         size_t msDelay = 0;
 
+        [[nodiscard]] bool needUpdateDelay() const {
+            if (outTime == boost::posix_time::not_a_date_time) {
+                return false;
+            }
+            if (inTime == boost::posix_time::not_a_date_time) {
+                return false;
+            }
+            return msDelay == 0;
+        }
+
         bool updateDelay() {
             if (outTime == boost::posix_time::not_a_date_time) {
                 msDelay = 0;
@@ -106,8 +116,13 @@ namespace OwlDiscoverState {
                 return false;
             }
             auto a = (inTime - outTime);
-            msDelay = a.total_milliseconds();
-            return msDelay > 0;
+            auto ms = a.total_milliseconds();
+            if (ms > 0) {
+                msDelay = ms;
+                return true;
+            }
+            msDelay = 0;
+            return false;
         }
 
         auto operator<=>(const PackageSendInfo &o) const {
