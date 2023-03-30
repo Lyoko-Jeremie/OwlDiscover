@@ -315,7 +315,7 @@ namespace OwlImGuiServiceImpl {
                             do_all(OwlMailDefine::ControlCmd::ping);
                         }
                         if (ImGui::IsItemHovered()) {
-                            ImGui::SetTooltip("测试所有已列出设备是否在线，对固件版本无要求");
+                            ImGui::SetTooltip("测试所有已列出设备是否在线，并检查网络延迟，对固件版本无要求");
                         }
                         ImGui::SameLine();
                         if (ImGui::Button("清空列表")) {
@@ -449,7 +449,7 @@ namespace OwlImGuiServiceImpl {
                                             do_ip(OwlMailDefine::ControlCmd::ping, n.ip);
                                         }
                                         if (ImGui::IsItemHovered()) {
-                                            ImGui::SetTooltip("测试此设备是否在线");
+                                            ImGui::SetTooltip("测试此设备是否在线，并检查网络延迟");
                                         }
                                         ImGui::TableNextColumn();
                                         if (ImGui::SmallButton(("Query##" + n.ip).c_str())) {

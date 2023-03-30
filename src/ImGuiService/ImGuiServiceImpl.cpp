@@ -303,8 +303,11 @@ namespace OwlImGuiServiceImpl {
             const auto &it = acc.find(OwlDiscoverState::PackageSendInfo::PKG::make_tuple(*s));
             if (it == acc.end()) {
                 if (s->direct == OwlDiscoverState::PackageSendInfoDirectEnum::in) {
-                    BOOST_LOG_OWL(warning) << "ImGuiServiceImpl::update_package_send_info (it == accIp.end()) ip "
-                                           << s->ip;
+                    BOOST_LOG_OWL(warning) << "ImGuiServiceImpl::update_package_send_info a in package nto have out ip "
+                                           << s->ip
+                                           << " cmdId " << s->cmdId
+                                           << " packageId " << s->packageId
+                                           << " clientId " << s->clientId;
                     // need have out package record first
                     // ignore
                     return;
@@ -312,14 +315,20 @@ namespace OwlImGuiServiceImpl {
                     // a new out package, record it
                     acc.insert(*s);
                     BOOST_LOG_OWL(trace_gui) << "ImGuiServiceImpl::update_package_send_info new ip "
-                                             << s->ip;
+                                             << s->ip
+                                             << " cmdId " << s->cmdId
+                                             << " packageId " << s->packageId
+                                             << " clientId " << s->clientId;
                     remove_old_package_send_info();
                     return;
                 }
             }
             if (s->direct == OwlDiscoverState::PackageSendInfoDirectEnum::state) {
                 BOOST_LOG_OWL(warning) << "ImGuiServiceImpl::update_package_send_info network wrong ip "
-                                       << s->ip;
+                                       << s->ip
+                                       << " cmdId " << s->cmdId
+                                       << " packageId " << s->packageId
+                                       << " clientId " << s->clientId;
                 // this package are end
                 // network wrong
                 // ignore
@@ -327,14 +336,20 @@ namespace OwlImGuiServiceImpl {
             }
             if (s->direct == OwlDiscoverState::PackageSendInfoDirectEnum::out) {
                 BOOST_LOG_OWL(warning) << "ImGuiServiceImpl::update_package_send_info duplicate package ip "
-                                       << s->ip;
+                                       << s->ip
+                                       << " cmdId " << s->cmdId
+                                       << " packageId " << s->packageId
+                                       << " clientId " << s->clientId;
                 // duplicate package
                 // ignore
                 return;
             }
             // update the inTime & delay & state
             BOOST_LOG_OWL(trace_gui) << "ImGuiServiceImpl::update_package_send_info update ip "
-                                     << s->ip;
+                                     << s->ip
+                                     << " cmdId " << s->cmdId
+                                     << " packageId " << s->packageId
+                                     << " clientId " << s->clientId;
             acc.modify(it, [s](OwlDiscoverState::PackageSendInfo &a) { ;
                 a.direct = OwlDiscoverState::PackageSendInfoDirectEnum::state;
                 a.inTime = s->inTime;
@@ -491,14 +506,20 @@ namespace OwlImGuiServiceImpl {
     }
 
     void ImGuiServiceImpl::deleteItem(const std::string &s) {
-        BOOST_LOG_OWL(trace_gui) << "deleteItem " << s;
-        auto &accIp = items.get<OwlDiscoverState::DiscoverStateItem::IP>();
-        auto n = accIp.erase(s);
-        BOOST_LOG_OWL(trace_gui) << "deleteItem " << n;
+        boost::asio::post(ioc_, [this, self = shared_from_this(), s = s]() {
+            // must run in a isolate context, detach from GUI draw
+            BOOST_LOG_OWL(trace_gui) << "deleteItem " << s;
+            auto &accIp = items.get<OwlDiscoverState::DiscoverStateItem::IP>();
+            auto n = accIp.erase(s);
+            BOOST_LOG_OWL(trace_gui) << "deleteItem " << n;
+        });
     }
 
     void ImGuiServiceImpl::cleanItem() {
-        items.clear();
+        boost::asio::post(ioc_, [this, self = shared_from_this()]() {
+            // must run in a isolate context, detach from GUI draw
+            items.clear();
+        });
     }
 
     void ImGuiServiceImpl::HelpMarker(const char *desc) {
