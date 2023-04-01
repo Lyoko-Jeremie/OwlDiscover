@@ -82,9 +82,7 @@ namespace OwlControlService {
         }
 
         // Set up an HTTP GET request message
-        boost::beast::http::request<boost::beast::http::string_body> req{
-                boost::beast::http::verb::post,
-                target, version};
+        boost::beast::http::request<boost::beast::http::string_body> req{method, target, version};
         req.set(boost::beast::http::field::host, host);
         req.set(boost::beast::http::field::user_agent, BOOST_BEAST_VERSION_STRING);
         req.body() = data_send;

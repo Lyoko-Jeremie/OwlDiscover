@@ -75,6 +75,9 @@ namespace OwlImGuiService {
         });
 
         mailbox_http_->receiveB2A([this](OwlMailDefine::MailHttpControl2Control &&data) {
+            if (data->runner) {
+                data->runner(data);
+            }
             if (data->discoverStateItem) {
                 if (data->updateOnly) {
                     auto &item = data->discoverStateItem;
@@ -82,9 +85,6 @@ namespace OwlImGuiService {
                 } else {
                     auto &item = data->discoverStateItem;
                     impl->new_state(item);
-                }
-                if (data->runner) {
-                    data->runner(data);
                 }
             }
             if (data->packageSendInfo) {
@@ -176,7 +176,8 @@ namespace OwlImGuiService {
         auto a = boost::make_shared<OwlMailDefine::HttpRequestInfo>(
                 ip,
                 "8080",
-                "/api/version",
+//                "/api/version",
+                "/VERSION",
                 "",
                 boost::beast::http::verb::get
         );

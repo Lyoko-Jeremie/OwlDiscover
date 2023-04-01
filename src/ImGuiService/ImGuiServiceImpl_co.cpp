@@ -471,7 +471,7 @@ namespace OwlImGuiServiceImpl {
                                                 sendCmdHttpReadOTA(n.ip);
                                             }
                                         } else {
-                                            ImGui::Text(n.buildTime.c_str());
+                                            ImGui::Text(n.versionOTA.c_str());
                                         }
                                         ImGui::TableNextColumn();
                                         if (!*(n.showCamera)) {
