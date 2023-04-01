@@ -41,6 +41,8 @@ namespace OwlLog {
 
     extern thread_local std::string threadName;
 
+    extern std::string allCopyrightVersionString;
+
     extern uint32_t globalClientId;
 
     // https://stackoverflow.com/questions/60977433/including-thread-name-in-boost-log

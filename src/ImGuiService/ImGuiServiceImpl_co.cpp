@@ -505,7 +505,7 @@ namespace OwlImGuiServiceImpl {
 
                 if (show_about_window) {
                     ImGui::Begin("关于", &show_about_window, ImGuiWindowFlags_AlwaysAutoResize);
-                    ImGui::Text(CopyrightString.c_str());
+                    ImGui::Text(OwlLog::allCopyrightVersionString.c_str());
                     ImGui::Text("广州市鑫广飞信息科技有限公司 版权所有 2023");
                     ImGui::Text("  ");
                     if (ImGui::Button("关闭"))

@@ -101,18 +101,6 @@ namespace OwlImGuiServiceImpl {
             config_(std::move(config)),
             parentPtr_(std::move(parentPtr)),
             getImageService(boost::make_shared<OwlGetImage::GetImage>(ioc_)) {
-
-            std::stringstream ss;
-            ss << "OwlDiscover"
-               << "\n   ProgramVersion " << ProgramVersion
-               << "\n   CodeVersion_GIT_REV " << CodeVersion_GIT_REV
-               << "\n   CodeVersion_GIT_TAG " << CodeVersion_GIT_TAG
-               << "\n   CodeVersion_GIT_BRANCH " << CodeVersion_GIT_BRANCH
-               << "\n   Boost " << BOOST_LIB_VERSION
-               << "\n   Dear ImGui " << IMGUI_VERSION
-               << "\n   BUILD_DATETIME " << CodeVersion_BUILD_DATETIME
-               << "\n ---------- OwlDiscover  Copyright (C) 2023 ---------- ";
-            CopyrightString = ss.str();
         }
 
     private:
@@ -235,8 +223,6 @@ namespace OwlImGuiServiceImpl {
             int freeze_rows = 1;
         };
         TableConfig table_config;
-
-        std::string CopyrightString;
 
         void HelpMarker(const char *desc);
 

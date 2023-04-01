@@ -2,6 +2,7 @@
 
 #include "OwlLog.h"
 #include <random>
+#include <sstream>
 #include <boost/core/null_deleter.hpp>
 #include <boost/log/expressions.hpp>
 #include <boost/log/sinks/sync_frontend.hpp>
@@ -17,9 +18,14 @@
 
 
 #include <imgui.h>
+#include <ft2build.h>
+#include <freetype/freetype.h>
+#include <SDL2/SDL_version.h>
 
 namespace OwlLog {
     thread_local std::string threadName;
+
+    std::string allCopyrightVersionString;
 
     uint32_t globalClientId;
 
@@ -204,16 +210,21 @@ namespace OwlLog {
 #endif // DEBUG_log_SerialPortRead
         );
 
-        BOOST_LOG_OWL(info_VSERION)
-            << "OwlDiscover"
-            << "\n   ProgramVersion " << ProgramVersion
-            << "\n   CodeVersion_GIT_REV " << CodeVersion_GIT_REV
-            << "\n   CodeVersion_GIT_TAG " << CodeVersion_GIT_TAG
-            << "\n   CodeVersion_GIT_BRANCH " << CodeVersion_GIT_BRANCH
-            << "\n   Boost " << BOOST_LIB_VERSION
-            << "\n   Dear ImGui " << IMGUI_VERSION
-            << "\n   BUILD_DATETIME " << CodeVersion_BUILD_DATETIME
-            << "\n ---------- OwlDiscover  Copyright (C) 2023 ---------- ";
+        std::stringstream allVersionStringS;
+        allVersionStringS
+                << "OwlDiscover"
+                << "\n   ProgramVersion " << ProgramVersion
+                << "\n   CodeVersion_GIT_REV " << CodeVersion_GIT_REV
+                << "\n   CodeVersion_GIT_TAG " << CodeVersion_GIT_TAG
+                << "\n   CodeVersion_GIT_BRANCH " << CodeVersion_GIT_BRANCH
+                << "\n   Boost " << BOOST_LIB_VERSION
+                << "\n   SDL2 " << SDL_MAJOR_VERSION << "." << SDL_MINOR_VERSION << "." << SDL_PATCHLEVEL
+                << "\n   FreeType " << FREETYPE_MAJOR << "." << FREETYPE_MINOR << "." << FREETYPE_PATCH
+                << "\n   Dear ImGui " << IMGUI_VERSION
+                << "\n   BUILD_DATETIME " << CodeVersion_BUILD_DATETIME
+                << "\n ---------- OwlDiscover  Copyright (C) 2023 ---------- ";
+        allCopyrightVersionString = allVersionStringS.str();
+        BOOST_LOG_OWL(info_VSERION) << allCopyrightVersionString;
 
         BOOST_LOG_OWL(trace_sp_tag) << "BOOST_LOG_OWL(trace_sp_tag)";
         BOOST_LOG_OWL(trace_cmd_tag) << "BOOST_LOG_OWL(trace_cmd_tag)";
