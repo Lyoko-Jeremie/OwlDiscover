@@ -172,6 +172,7 @@ namespace OwlImGuiService {
     void ImGuiService::sendCmdHttpReadOTA(std::string ip) {
         auto m = boost::make_shared<OwlMailDefine::MailControl2HttpControl::element_type>();
 
+        BOOST_LOG_OWL(info) << "sendCmdHttpReadOTA " << ip;
         auto a = boost::make_shared<OwlMailDefine::HttpRequestInfo>(
                 ip,
                 "8080",
@@ -185,6 +186,7 @@ namespace OwlImGuiService {
         m->callbackRunner = [this, self = shared_from_this(), ip = std::move(ip)](
                 OwlMailDefine::MailHttpControl2Control &&d) {
             BOOST_ASSERT(d->httpResponseData);
+            BOOST_LOG_OWL(info) << "sendCmdHttpReadOTA httpResponseData " << d->httpResponseData;
 
             BOOST_LOG_OWL(warning) << "ImGuiService sendCmdHttpReadOTA() d->httpResponseData "
                                    << *(d->httpResponseData);
@@ -215,6 +217,8 @@ namespace OwlImGuiService {
             if (rr.has_value()) {
                 auto version = rr.value();
                 if (impl && !version.empty()) {
+                    BOOST_LOG_OWL(warning) << "ImGuiService analysisOtaReturn() update_ota "
+                                           << ip << " version " << version;
                     impl->update_ota(ip, version);
                     return;
                 }
