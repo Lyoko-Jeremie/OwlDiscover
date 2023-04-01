@@ -176,8 +176,8 @@ namespace OwlImGuiService {
         auto a = boost::make_shared<OwlMailDefine::HttpRequestInfo>(
                 ip,
                 "8080",
-//                "/api/version",
-                "/VERSION",
+                "/api/version",
+//               "/VERSION",
                 "",
                 boost::beast::http::verb::get
         );
@@ -305,7 +305,8 @@ namespace OwlImGuiService {
                 auto a = boost::make_shared<OwlMailDefine::HttpRequestInfo>(
                         ip,
                         boost::lexical_cast<std::string>(8080),
-                        R"(/VERSION)",
+                        "/api/version",
+//                      "/VERSION",
                         "",
                         boost::beast::http::verb::get
                 );
