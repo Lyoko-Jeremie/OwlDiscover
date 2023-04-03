@@ -42,8 +42,19 @@ namespace OwlControlService {
 //                    0
 //            });
 
-            udp_broadcast_socket_.set_option(boost::asio::ip::udp::socket::reuse_address(true));
-            udp_broadcast_socket_.set_option(boost::asio::socket_base::broadcast(true));
+            boost::system::error_code ec;
+
+            udp_broadcast_socket_.set_option(boost::asio::ip::udp::socket::reuse_address(true), ec);
+            if (ec) {
+                BOOST_LOG_OWL(error)
+                    << "udp_broadcast_socket_.set_option(boost::asio::ip::udp::socket::reuse_address(true), ec); "
+                    << ec.what();
+            }
+            udp_broadcast_socket_.set_option(boost::asio::socket_base::broadcast(true), ec);
+            if (ec) {
+                BOOST_LOG_OWL(error)
+                    << "udp_broadcast_socket_.set_option(boost::asio::socket_base::broadcast(true), ec); " << ec.what();
+            }
 
             broadcast_endpoint_ = decltype(broadcast_endpoint_){
                     boost::asio::ip::address_v4::broadcast(),

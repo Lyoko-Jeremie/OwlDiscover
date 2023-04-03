@@ -46,20 +46,42 @@ namespace OwlMultiCast {
             sender_port_ = c.sender_port;
             multicast_listen_endpoint_ = decltype(multicast_listen_endpoint_){multicast_address_, multicast_port_};
             multicast_listen_socket_.open(multicast_listen_endpoint_.protocol());
+            boost::system::error_code ecc;
             multicast_listen_socket_.set_option(boost::asio::ip::udp::socket::reuse_address(true));
+            if (ecc) {
+                BOOST_LOG_OWL(error)
+                    << "multicast_listen_socket_.set_option(boost::asio::ip::udp::socket::reuse_address(true)) "
+                    << ecc.what();
+            }
             multicast_listen_socket_.bind(
-                    decltype(multicast_listen_endpoint_){multicast_listen_address_, multicast_port_});
+                    decltype(multicast_listen_endpoint_){multicast_listen_address_, multicast_port_}, ecc);
+            if (ecc) {
+                BOOST_LOG_OWL(error)
+                    << " multicast_listen_socket_.bind(decltype(multicast_listen_endpoint_){multicast_listen_address_, multicast_port_}, ecc) "
+                    << ecc.what();
+            }
 
             target_multicast_endpoint_ = decltype(target_multicast_endpoint_){multicast_address_, multicast_port_};
 
             sender_endpoint_ = decltype(sender_endpoint_){sender_address_, sender_port_};
             sender_socket_.open(sender_endpoint_.protocol());
 //            sender_socket_.set_option(boost::asio::ip::udp::socket::reuse_address(true));
-            sender_socket_.bind(sender_endpoint_);
+            sender_socket_.bind(sender_endpoint_, ecc);
+            if (ecc) {
+                BOOST_LOG_OWL(error)
+                    << "sender_socket_.bind(sender_endpoint_, ecc) "
+                    << ecc.what();
+            }
 
 
+            boost::system::error_code ec;
             // Join the multicast group.
-            multicast_listen_socket_.set_option(boost::asio::ip::multicast::join_group(multicast_address_));
+            multicast_listen_socket_.set_option(boost::asio::ip::multicast::join_group(multicast_address_), ec);
+            if (ec) {
+                BOOST_LOG_OWL(error)
+                    << "multicast_listen_socket_.set_option(boost::asio::ip::multicast::join_group(multicast_address_), ec) "
+                    << ec.what();
+            }
 
             json_parse_options_.allow_comments = true;
             json_parse_options_.allow_trailing_commas = true;
