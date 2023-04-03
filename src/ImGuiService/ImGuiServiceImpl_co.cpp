@@ -352,7 +352,9 @@ namespace OwlImGuiServiceImpl {
                                     ImGui::TableSetupColumn("#", ImGuiTableColumnFlags_NoSort |
                                                                  ImGuiTableColumnFlags_WidthFixed |
                                                                  ImGuiTableColumnFlags_NoHide, 0.0f);
-                                    ImGui::TableSetupColumn("IP", ImGuiTableColumnFlags_WidthFixed, 0.0f);
+                                    ImGui::TableSetupColumn("IP", ImGuiTableColumnFlags_NoSort |
+                                                                  ImGuiTableColumnFlags_WidthFixed |
+                                                                  ImGuiTableColumnFlags_NoHide, 0.0f);
                                     ImGui::TableSetupColumn("PORT", ImGuiTableColumnFlags_NoSort |
                                                                     ImGuiTableColumnFlags_WidthFixed, 0.0f);
                                     ImGui::TableSetupColumn("Timeout", ImGuiTableColumnFlags_NoSort |

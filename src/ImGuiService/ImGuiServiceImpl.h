@@ -219,7 +219,7 @@ namespace OwlImGuiServiceImpl {
                     | ImGuiTableFlags_ScrollX
                     | ImGuiTableFlags_ScrollY
                     | ImGuiTableFlags_SizingFixedFit;
-            int freeze_cols = 1;
+            int freeze_cols = 2;
             int freeze_rows = 1;
         };
         TableConfig table_config;
