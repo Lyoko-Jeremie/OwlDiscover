@@ -244,5 +244,7 @@ namespace OwlLog {
         BOOST_LOG_OWL(error) << "BOOST_LOG_OWL(error)";
         BOOST_LOG_OWL(fatal) << "BOOST_LOG_OWL(fatal)";
 
+        BOOST_LOG_OWL(info) << "globalClientId:" << globalClientId;
+
     }
 } // OwlLog
