@@ -147,7 +147,7 @@ namespace OwlImGuiServiceImpl {
 
         void remove_old_package_send_info();
 
-        void update_package_send_info(const boost::shared_ptr<OwlDiscoverState::PackageSendInfo> &s);
+        void update_package_send_info(const boost::shared_ptr<OwlDiscoverState::PackageSendInfo> &s,int port);
 
     private:
 

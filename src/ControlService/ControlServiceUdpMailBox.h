@@ -56,6 +56,7 @@ namespace OwlMailDefine {
         bool updateOnly = false;
 
         boost::shared_ptr<OwlDiscoverState::PackageSendInfo> packageSendInfo;
+        int port;
 
         std::function<void(boost::shared_ptr<UdpControl2Control>)> runner;
     };

@@ -268,11 +268,11 @@ namespace OwlImGuiServiceImpl {
         auto &accIp = items.get<OwlDiscoverState::DiscoverStateItem::IP>();
         auto it = acc.begin();
         while (it != acc.end()) {
-            if (accIp.find(it->ip) == accIp.end()) {
-                // remove not valid item
-                it = acc.erase(it);
-                continue;
-            }
+//            if (accIp.find(it->ip) == accIp.end()) {
+//                // remove not valid item
+//                it = acc.erase(it);
+//                continue;
+//            }
             if (it->needUpdateDelay()) {
                 // update delay
                 acc.modify(it, [](OwlDiscoverState::PackageSendInfo &a) { ;
@@ -280,7 +280,7 @@ namespace OwlImGuiServiceImpl {
                 });
             }
             if (it->msDelay > 1000 * 60 * 2) {
-                // remove timeout>1m item
+                // remove timeout>2m item
                 it = acc.erase(it);
                 continue;
             } else {
@@ -291,11 +291,13 @@ namespace OwlImGuiServiceImpl {
 
     }
 
-    void ImGuiServiceImpl::update_package_send_info(const boost::shared_ptr<OwlDiscoverState::PackageSendInfo> &s) {
+    void ImGuiServiceImpl::update_package_send_info(
+            const boost::shared_ptr<OwlDiscoverState::PackageSendInfo> &s,
+            int port) {
         BOOST_ASSERT(s);
         BOOST_ASSERT(!weak_from_this().expired());
 
-        boost::asio::dispatch(ioc_, [this, s, self = shared_from_this()]() {
+        boost::asio::dispatch(ioc_, [this, s, self = shared_from_this(), port]() {
             BOOST_ASSERT(s);
             BOOST_ASSERT(self);
 
@@ -303,8 +305,9 @@ namespace OwlImGuiServiceImpl {
             const auto &it = acc.find(OwlDiscoverState::PackageSendInfo::PKG::make_tuple(*s));
             if (it == acc.end()) {
                 if (s->direct == OwlDiscoverState::PackageSendInfoDirectEnum::in) {
-                    BOOST_LOG_OWL(warning) << "ImGuiServiceImpl::update_package_send_info a in package nto have out ip "
+                    BOOST_LOG_OWL(warning) << "ImGuiServiceImpl::update_package_send_info a in package not have out ip "
                                            << s->ip
+                                           << " port " << port
                                            << " cmdId " << s->cmdId
                                            << " packageId " << s->packageId
                                            << " clientId " << s->clientId;
@@ -316,6 +319,7 @@ namespace OwlImGuiServiceImpl {
                     acc.insert(*s);
                     BOOST_LOG_OWL(trace_gui) << "ImGuiServiceImpl::update_package_send_info new ip "
                                              << s->ip
+                                             << " port " << port
                                              << " cmdId " << s->cmdId
                                              << " packageId " << s->packageId
                                              << " clientId " << s->clientId;
@@ -326,6 +330,7 @@ namespace OwlImGuiServiceImpl {
             if (s->direct == OwlDiscoverState::PackageSendInfoDirectEnum::state) {
                 BOOST_LOG_OWL(warning) << "ImGuiServiceImpl::update_package_send_info network wrong ip "
                                        << s->ip
+                                       << " port " << port
                                        << " cmdId " << s->cmdId
                                        << " packageId " << s->packageId
                                        << " clientId " << s->clientId;
@@ -337,6 +342,7 @@ namespace OwlImGuiServiceImpl {
             if (s->direct == OwlDiscoverState::PackageSendInfoDirectEnum::out) {
                 BOOST_LOG_OWL(warning) << "ImGuiServiceImpl::update_package_send_info duplicate package ip "
                                        << s->ip
+                                       << " port " << port
                                        << " cmdId " << s->cmdId
                                        << " packageId " << s->packageId
                                        << " clientId " << s->clientId;
@@ -347,14 +353,18 @@ namespace OwlImGuiServiceImpl {
             // update the inTime & delay & state
             BOOST_LOG_OWL(trace_gui) << "ImGuiServiceImpl::update_package_send_info update ip "
                                      << s->ip
+                                     << " port " << port
                                      << " cmdId " << s->cmdId
                                      << " packageId " << s->packageId
                                      << " clientId " << s->clientId;
-            acc.modify(it, [s](OwlDiscoverState::PackageSendInfo &a) { ;
+            acc.modify(it, [s](OwlDiscoverState::PackageSendInfo &a) {
                 a.direct = OwlDiscoverState::PackageSendInfoDirectEnum::state;
                 a.inTime = s->inTime;
                 a.updateDelay();
             });
+            auto m = boost::make_shared<OwlDiscoverState::DiscoverState>();
+            m->items.emplace_back(s->ip, port);
+            new_state(m);
             remove_old_package_send_info();
 
         });

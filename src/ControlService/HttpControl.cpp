@@ -284,6 +284,7 @@ namespace OwlControlService {
                         get(ooo, "clientId", 0),
                         OwlDiscoverState::PackageSendInfoDirectEnum::out
                 );
+                mm->port = remote_endpoint.port();
                 mailbox_->sendB2A(std::move(mm));
             }
         }
@@ -335,6 +336,7 @@ namespace OwlControlService {
                                                          get(ooo, "clientId", 0),
                                                          OwlDiscoverState::PackageSendInfoDirectEnum::in
                                                  );
+                                                 mm->port = remote_endpoint.port();
                                              }
 
                                              auto programVersion = get<std::string>(o, "Version", "");

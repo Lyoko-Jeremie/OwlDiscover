@@ -70,7 +70,7 @@ namespace OwlImGuiService {
                 }
             }
             if (data->packageSendInfo) {
-                impl->update_package_send_info(data->packageSendInfo);
+                impl->update_package_send_info(data->packageSendInfo, data->port);
             }
         });
 
@@ -88,7 +88,7 @@ namespace OwlImGuiService {
                 }
             }
             if (data->packageSendInfo) {
-                impl->update_package_send_info(data->packageSendInfo);
+                impl->update_package_send_info(data->packageSendInfo, data->port);
             }
         });
 
@@ -209,7 +209,8 @@ namespace OwlImGuiService {
                 json_parse_options_
         );
         if (ec) {
-            BOOST_LOG_OWL(warning) << "ImGuiService analysisOtaReturn() invalid package " << ec.what();
+            BOOST_LOG_OWL(warning) << "ImGuiService analysisOtaReturn() invalid package from " << ip
+                                   << " what " << ec.what();
             return;
         }
 

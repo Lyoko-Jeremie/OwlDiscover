@@ -48,6 +48,7 @@ namespace OwlMailDefine {
         boost::shared_ptr<std::string> httpResponseData;
 
         bool updateOnly = false;
+        int port;
 
         boost::shared_ptr<OwlDiscoverState::PackageSendInfo> packageSendInfo;
 

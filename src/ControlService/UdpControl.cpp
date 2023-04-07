@@ -96,6 +96,7 @@ namespace OwlControlService {
                             clientId,
                             OwlDiscoverState::PackageSendInfoDirectEnum::in
                     );
+                    m->port = receiver_endpoint->port();
                 }
 
                 m->discoverStateItem = std::move(controlCmdData);
@@ -137,6 +138,7 @@ namespace OwlControlService {
                     }
                     if (ec) {
                         BOOST_LOG_OWL(error) << "UdpControl do_receive() ec " << ec.what();
+                        do_receive();
                         return;
                     }
                 });
@@ -242,7 +244,7 @@ namespace OwlControlService {
         BOOST_ASSERT(data);
         BOOST_LOG_OWL(trace_udp) << "UdpControl sendCmd data " << data->ip << " " << static_cast<int>(data->cmd);
 
-        boost::shared_ptr<boost::json::value> V;
+        boost::shared_ptr <boost::json::value> V;
         switch (data->cmd) {
             case OwlMailDefine::ControlCmd::ping:
                 V = boost::make_shared<boost::json::value>(boost::json::value{
@@ -371,7 +373,7 @@ namespace OwlControlService {
                 boost::lexical_cast<boost::asio::ip::port_type>(config_->config().CommandServiceUdpPort),
         };
 
-        boost::shared_ptr<std::string> S;
+        boost::shared_ptr <std::string> S;
 
         if (data->cmd == OwlMailDefine::ControlCmd::query) {
             S = boost::make_shared<std::string>(boost::json::serialize(boost::json::value{
@@ -404,6 +406,7 @@ namespace OwlControlService {
                                 get(ooo, "clientId", 0),
                                 OwlDiscoverState::PackageSendInfoDirectEnum::out
                         );
+                        mm->port = remote_endpoint.port();
                         mailbox_->sendB2A(std::move(mm));
                     }
                     BOOST_LOG_OWL(trace_udp) << "UdpControl sendCmd udp_socket_.async_send_to ok";
