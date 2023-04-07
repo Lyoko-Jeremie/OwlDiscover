@@ -318,6 +318,10 @@ namespace OwlImGuiServiceImpl {
                             ImGui::SetTooltip("测试所有已列出设备是否在线，并检查网络延迟，对固件版本无要求");
                         }
                         ImGui::SameLine();
+                        if (ImGui::Button("全部校准(Calibrate)")) {
+                            do_all(OwlMailDefine::ControlCmd::calibrate);
+                        }
+                        ImGui::SameLine();
                         if (ImGui::Button("清空列表")) {
                             cleanItem();
                         }
