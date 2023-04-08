@@ -34,6 +34,8 @@ namespace OwlMailDefine {
 
         query,
         broadcast,
+
+        restart,
     };
 
     struct ControlCmdData : public boost::enable_shared_from_this<ControlCmdData> {

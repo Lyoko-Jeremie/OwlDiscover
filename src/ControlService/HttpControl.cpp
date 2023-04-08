@@ -556,6 +556,21 @@ namespace OwlControlService {
                     case OwlMailDefine::ControlCmd::query:
                         sendCmd(data, data->controlCmdData);
                         break;
+                    case OwlMailDefine::ControlCmd::restart: {
+                        send_request([this, self = shared_from_this(), data = data](std::pair<bool, std::string> r) {
+                                         auto mm = boost::make_shared<OwlMailDefine::MailHttpControl2Control::element_type>();
+                                         mm->runner = data->callbackRunner;
+                                         mm->httpResponseData = boost::make_shared<std::string>(r.second);
+                                         mailbox_->sendB2A(std::move(mm));
+                                     },
+                                     data,
+                                     "",
+                                     data->controlCmdData->ip,
+                                     "8080",
+                                     "/api/owl_restart",
+                                     boost::beast::http::verb::get);
+                    }
+                        break;
                     default:
                         break;
                 }

@@ -153,15 +153,15 @@ namespace OwlImGuiService {
     void ImGuiService::sendCmdHttp(boost::shared_ptr<OwlMailDefine::ControlCmdData> data) {
         auto m = boost::make_shared<OwlMailDefine::MailControl2HttpControl::element_type>();
 
-        auto a = boost::make_shared<OwlDiscoverState::DiscoverStateItem>(
-                data->ip,
-                0
-        );
+//        auto a = boost::make_shared<OwlDiscoverState::DiscoverStateItem>(
+//                data->ip,
+//                0
+//        );
 
         BOOST_ASSERT(data);
         m->controlCmdData = std::move(data);
 
-        m->callbackRunner = [this, self = shared_from_this(), a](OwlMailDefine::MailHttpControl2Control &&d) {
+        m->callbackRunner = [this, self = shared_from_this()/*, a*/](OwlMailDefine::MailHttpControl2Control &&d) {
             boost::ignore_unused(d);
 //            impl->new_state(a);
         };

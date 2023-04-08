@@ -242,6 +242,8 @@ namespace OwlImGuiServiceImpl {
 
         void test_cmd_do_all(OwlMailDefine::ControlCmd cmd);
 
+        void test_cmd_do_all_restart();
+
         void init_test_cmd_data();
 
         std::array<int, 3> goto_pos{0, 0, 0};

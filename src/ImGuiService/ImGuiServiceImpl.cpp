@@ -551,6 +551,21 @@ namespace OwlImGuiServiceImpl {
         }
     }
 
+    void ImGuiServiceImpl::test_cmd_do_all_restart() {
+        auto p = parentPtr_.lock();
+        if (p) {
+            auto &accRc = items.get<DiscoverStateItemContainerSequencedAccess>();
+            for (const auto &a: accRc) {
+                if (*a.selected) {
+                    auto m = boost::make_shared<OwlMailDefine::ControlCmdData>();
+                    m->cmd = OwlMailDefine::ControlCmd::restart;
+                    m->ip = a.ip;
+                    p->sendCmdHttp(std::move(m));
+                }
+            }
+        }
+    }
+
     void ImGuiServiceImpl::init_test_cmd_data() {
         testCmdList.emplace_back("起飞##cmd_takeoff", [this]() {
             test_cmd_do_all(OwlMailDefine::ControlCmd::takeoff);
@@ -633,7 +648,8 @@ namespace OwlImGuiServiceImpl {
 
 
         if (ImGui::BeginTable("CmdSelectTable", 2,
-                              ImGuiTableFlags_Resizable | ImGuiTableFlags_NoSavedSettings |
+                              ImGuiTableFlags_Resizable |
+                              ImGuiTableFlags_NoSavedSettings |
                               ImGuiTableFlags_Borders)) {
             auto &accRc = items.get<DiscoverStateItemContainerSequencedAccess>();
             for (const auto &a: accRc) {
@@ -647,6 +663,11 @@ namespace OwlImGuiServiceImpl {
             ImGui::EndTable();
         }
 
+        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4{1, 0, 0, 1});
+        if (ImGui::Button("重启##restart", ImVec2{120, 60})) {
+            test_cmd_do_all_restart();
+        }
+        ImGui::PopStyleColor(1);
 
         ImGui::End();
     }
