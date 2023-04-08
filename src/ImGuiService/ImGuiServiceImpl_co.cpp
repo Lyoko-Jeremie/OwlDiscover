@@ -524,6 +524,14 @@ namespace OwlImGuiServiceImpl {
                     for (const auto &a: accRc) {
                         if (*(a.showCamera)) {
                             show_camera(a);
+                        } else {
+                            // clean camera image data
+                            if (a.imgDataFont->texture) {
+                                a.imgDataFont->cleanTexture();
+                            }
+                            if (a.imgDataDown->texture) {
+                                a.imgDataDown->cleanTexture();
+                            }
                         }
                     }
                 }

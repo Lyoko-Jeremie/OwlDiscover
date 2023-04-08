@@ -87,7 +87,16 @@ namespace OwlImGuiDirectX11 {
             }
         }
 
+        bool isCleaned() const {
+            return width == 0
+                   && height == 0
+                   && !texture.operator bool();
+        }
+
         bool cleanTexture() {
+            if (isCleaned()) {
+                return true;
+            }
             this->operator=(std::move(ImGuiD3D11Img{}));
             return true;
         }
