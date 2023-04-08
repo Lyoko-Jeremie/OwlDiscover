@@ -545,7 +545,7 @@ namespace OwlImGuiServiceImpl {
     void ImGuiServiceImpl::test_cmd_do_all(OwlMailDefine::ControlCmd cmd) {
         auto &accRc = items.get<DiscoverStateItemContainerSequencedAccess>();
         for (const auto &a: accRc) {
-            if (*a.selected) {
+            if (*a.cmdTestSelected) {
                 do_ip(cmd, a.ip);
             }
         }
@@ -556,7 +556,7 @@ namespace OwlImGuiServiceImpl {
         if (p) {
             auto &accRc = items.get<DiscoverStateItemContainerSequencedAccess>();
             for (const auto &a: accRc) {
-                if (*a.selected) {
+                if (*a.cmdTestSelected) {
                     auto m = boost::make_shared<OwlMailDefine::ControlCmdData>();
                     m->cmd = OwlMailDefine::ControlCmd::restart;
                     m->ip = a.ip;
@@ -655,7 +655,7 @@ namespace OwlImGuiServiceImpl {
             for (const auto &a: accRc) {
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
-                ImGui::Selectable(a.ip.c_str(), a.selected.get(),
+                ImGui::Selectable(a.ip.c_str(), a.cmdTestSelected.get(),
                                   ImGuiSelectableFlags_SpanAllColumns);
                 ImGui::TableNextColumn();
                 ImGui::Text(boost::lexical_cast<std::string>(a.port).c_str());
@@ -670,6 +670,32 @@ namespace OwlImGuiServiceImpl {
         ImGui::PopStyleColor(1);
 
         ImGui::End();
+    }
+
+    void ImGuiServiceImpl::show_debug_state() {
+        ImGui::Begin("状态检测", &show_state_window);
+
+
+        if (ImGui::BeginTable("StateDebugSelectTable", 2,
+                              ImGuiTableFlags_Resizable |
+                              ImGuiTableFlags_NoSavedSettings |
+                              ImGuiTableFlags_Borders)) {
+            auto &accRc = items.get<DiscoverStateItemContainerSequencedAccess>();
+            for (const auto &a: accRc) {
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+                ImGui::Selectable(a.ip.c_str(), a.stateDebugSelected.get(),
+                                  ImGuiSelectableFlags_SpanAllColumns);
+                ImGui::TableNextColumn();
+                ImGui::Text(boost::lexical_cast<std::string>(a.port).c_str());
+            }
+            ImGui::EndTable();
+        }
+
+        if (ImGui::Button("flush##flushState", ImVec2{120, 60})) {
+//            test_cmd_do_all_restart();
+        }
+
     }
 
     void ImGuiServiceImpl::start() {

@@ -540,6 +540,10 @@ namespace OwlImGuiServiceImpl {
                     show_test_cmd();
                 }
 
+                if (show_state_window) {
+                    show_debug_state();
+                }
+
 
                 // Rendering
                 ImGui::Render();

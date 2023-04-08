@@ -178,7 +178,8 @@ namespace OwlDiscoverState {
         boost::posix_time::ptime firstTime;
         boost::posix_time::ptime lastTime;
 
-        boost::shared_ptr<bool> selected = boost::make_shared<bool>(false);
+        boost::shared_ptr<bool> cmdTestSelected = boost::make_shared<bool>(false);
+        boost::shared_ptr<bool> stateDebugSelected = boost::make_shared<bool>(false);
         boost::shared_ptr<bool> showCamera = boost::make_shared<bool>(false);
 
         std::string programVersion;

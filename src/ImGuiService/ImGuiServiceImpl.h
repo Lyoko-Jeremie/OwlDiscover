@@ -198,6 +198,7 @@ namespace OwlImGuiServiceImpl {
         bool show_demo_window = false;
         bool show_about_window = false;
         bool show_test_cmd_window = false;
+        bool show_state_window = false;
         ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
         bool open = true;
@@ -205,8 +206,7 @@ namespace OwlImGuiServiceImpl {
 
         struct TableConfig {
             ImGuiTableFlags table_flags =
-                    ImGuiTableFlags_Reorderable
-                    | ImGuiTableFlags_RowBg
+                    ImGuiTableFlags_RowBg
                     | ImGuiTableFlags_Borders
                     | ImGuiTableFlags_BordersH
                     | ImGuiTableFlags_BordersOuterH
@@ -249,6 +249,8 @@ namespace OwlImGuiServiceImpl {
         std::array<int, 3> goto_pos{0, 0, 0};
 
         void show_test_cmd();
+
+        void show_debug_state();
 
         void show_camera(const OwlDiscoverState::DiscoverStateItem &a);
 
